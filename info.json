@@ -1,16 +1,6 @@
 ﻿{
 	"WindowTitle": "읍읍읍",
-	"Version": "0,1",
+	"version": "0.1",
 	"StatusBarText": "Hello World",
-	"UpdateURL": "",
-	"array": [
-		"Auto",
-		"Hot",
-		"key"
-	],
-	"object": {
-		"A": "Auto",
-		"H": "Hot",
-		"K": "key"
-	}
+	"UpdateURL": ""
 }
