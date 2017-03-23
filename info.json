@@ -1,6 +1,6 @@
-﻿{
-	"WindowTitle": "읍읍읍",
-	"version": "0.1",
-	"StatusBarText": "Hello World",
-	"UpdateURL": ""
+{
+    "title": "읍읍이",
+    "version": "0.1",
+    "updateurl": "na",
+    "statusbartext": "hello world"
 }

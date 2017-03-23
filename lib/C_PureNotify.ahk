@@ -101,4 +101,5 @@
 	}
 }
 
-#Include, lib\gdip.ahk
+
+#Include %A_LineFile%\..\gdip.ahk
