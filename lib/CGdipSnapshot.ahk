@@ -11,7 +11,7 @@ Consider anything prefixed with _ as "internal" and not to be messed with unless
 ToDo:
 
 */
-#include gdip.ahk
+#Include %A_LineFile%\..\gdip.ahk
 
 Class CGDipSnapShot {
 	; "private" Properties - Do not attempt to Set or Get! ===============
