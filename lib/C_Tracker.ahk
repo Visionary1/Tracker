@@ -1,30 +1,27 @@
 ﻿Class Tracker
 {
-	__New(Resolution := "High")
+	__New(InGameSensi := 4, Humanizer := 10)
 	{
-		this.MouseAlloc := DynaCall("mouse_event", ["iiiii"], 1, _X := "", _Y := "", 0, 0)
+		this.MouseAlloc := DynaCall("mouse_event", ["iiiii"], 1, _X := "", _Y := "")
 
-		If (Resolution == "High")
-		{
-			this.xa := 1
-			this.ya := -3
-			this.LtoRaddendOffset := 1.2
+		this.xa := 1
+		this.ya := -3
+		this.headX := 41 + this.xa*3
+		this.headY := 77 + this.ya*5
+		;this.LtoRaddendOffset := 1.2
 
-			;this.xrange := 1
-			;this.yrange := 1
-			;this.X1 := 0 + (A_ScreenWidth * (this.xrange/10))
-			this.X1 := (A_ScreenWidth)/2 - (A_ScreenWidth)/5
-			;this.Y1 := 0 + (A_ScreenHeight * (this.yrange/10))-40
-			this.Y1 := (A_ScreenHeight)/2 - (A_ScreenHeight)/4
-			;this.X2 := A_ScreenWidth - (A_ScreenWidth * (this.xrange/10))
-			this.X2 := (A_ScreenWidth)/2 + (A_ScreenWidth)/5
-			;this.Y2 := A_ScreenHeight - (A_ScreenHeight * (this.yrange / 10))-75
-			this.Y2 := (A_ScreenHeight)/2 + (A_ScreenHeight)/4
-			this.ColorID := 0xFF0013
+		this.InGameSensi := InGameSensi
+		this.Humanizer := Humanizer / 10
+		this.offset := ( 0.116 * ( this.InGameSensi * (16 / 5) ) ) * this.Humanizer
 
-			; 0x960000 ~ 0xFF4B5A
-			this.ColorVariation := 0
-		}
+		this.X1 := (A_ScreenWidth)/2 - (A_ScreenWidth)/5
+		this.Y1 := (A_ScreenHeight)/2 - (A_ScreenHeight)/4
+		this.X2 := (A_ScreenWidth)/2 + (A_ScreenWidth)/5
+		this.Y2 := (A_ScreenHeight)/2 + (A_ScreenHeight)/4
+		this.ColorID := 0xFF0013
+
+		; 0x960000 ~ 0xFF4B5A
+		this.ColorVariation := 0
 	}
 
 	; Debug(Version := 1)
@@ -52,105 +49,131 @@
 
 		this.Aim := {X: OutputVarX, Y: OutputVarY}
 
+		;DllCall("mouse_event", "UInt", 0x01, "UInt", (this.Aim.X+42)/offset, "UInt", (this.Aim.Y+80)/(offset*2.41))
+
+		; MouseGetPos, xpos, ypos		
+		; x := (this.Aim.X) - xpos  ;/ (10 / Sensitivity)
+		; y := (this.Aim.Y) - ypos ;/ (10 / Sensitivity)
+
+		;Tooltip, % this.Aim.X "x" this.Aim.Y "`n" x "x" y "`n" xpos "x" A_ScreenWidth/2
+
+		;DllCall("mouse_event",uint,1,int, x*2 ,int, y*2,uint,0,int,0)
+
+		; ;MouseGetPos, xpos, ypos
+		; ;MsgBox, % xpos "x" ypos
+		; ; If ( Abs(this.Aim.Y) < 3 ) && ( Abs(this.Aim.X) < 1 )
+		; ; 	Return
+
+		;DllCall("mouse_event",uint,1,int, x ,int, y,uint,0,int,0)
+		;MouseMove, % this.Aim.X, % this.Aim.Y
 	}
 
-	PixelSeach()
-	{
-		snap := new CGdipSnapshot(this.X1, this.Y1, this.X2 - this.X1, this.Y2 - this.Y1)
-		snap.TakeSnapshot()
+	; PixelSeach()
+	; {
+	; 	snap := new CGdipSnapshot(this.X1, this.Y1, this.X2 - this.X1, this.Y2 - this.Y1)
+	; 	snap.TakeSnapshot()
 
-		x := this.X1
-		y := this.Y1
-		Loop
-		{
-			x++
-			If ( x = this.X2 - this.X1 ) {
-				x := this.X1
-				y++
-			}
-			snap.PixelScreen[x, y].rgb
-		} Until snap.PixelScreen[x, y].rgb = this.ColorID
+	; 	x := this.X1
+	; 	y := this.Y1
+	; 	Loop
+	; 	{
+	; 		x++
+	; 		If ( x = this.X2 - this.X1 ) {
+	; 			x := this.X1
+	; 			y++
+	; 		}
+	; 		snap.PixelScreen[x, y].rgb
+	; 	} Until snap.PixelScreen[x, y].rgb = this.ColorID
 		
-		MsgBox, % snap.PixelScreen[x, y].rgb
-		MouseMove, x, y
-	}
+	; 	MsgBox, % snap.PixelScreen[x, y].rgb
+	; 	MouseMove, x, y
+	; }
 
-	Search_v2()
+	; Search_v2()
+	; {
+	; 	this.Search()
+
+	; 	MsgBox, % this.Aim.X "x" this.Aim.Y
+	; 	Loop
+	; 	{
+	; 		PixelGetColor, OutputVar, this.Aim.X + A_Index, this.Aim.Y, RGB
+	; 		finalX := this.Aim.X + A_Index
+	; 	} Until OutputVar != 0xFF0013
+
+	; 	MsgBox, % finalX
+
+	; 	snap := new CGdipSnapshot(this.Aim.X, this.Aim.Y, finalX - this.Aim.X, this.Y2 - this.Y1)
+	; 	snap.TakeSnapshot()
+	; 	snap.PixelScreen[x, y].rgb
+	; 	;snap.SaveSnapshot("myfile.png")		; PNG format
+
+
+		
+	; 	x := this.X1, y := this.Y1
+	; 	snap := new CGdipSnapshot(this.X1, this.Y1, this.X2 - this.X1, this.Y2 - this.Y1)
+	; 	snap.TakeSnapshot()
+
+	; 	; get the coordinate of left health bar
+	; 	found := snap.PixelScreen[x, y].rgb
+	; 	While, found != this.ColorID
+	; 	{
+	; 		x++
+	; 		If ( x = this.X2 )
+	; 		{
+	; 			y++
+	; 			x := this.X1
+	; 		}
+	; 		If ( y = this.Y2 )
+	; 			Break
+
+	; 		MouseMove, x, y
+	; 		;ToolTip, % x "x" y "`n" snap.PixelSnap[x, y].rgb
+	; 		found := snap.PixelSnap[x, y].rgb
+	; 	}
+	; 	MouseMove, x, y
+		
+	; }
+
+	; isRed(Var)
+	; {
+	; 	static min := {R: 150, G: 0, B:= 0}, max := {R: 255, G: 75, B:= 90}
+
+	; 	Var := SubStr(Var, 3)
+	; 	if (pixel.rgbRed >= minR && pixel.rgbRed <= maxR &&
+	; 		pixel.rgbGreen >= minG && pixel.rgbGreen <= maxG &&
+	; 		pixel.rgbBlue >= minB && pixel.rgbBlue <= maxB)
+	; 	{
+	; 		return true;
+	; 	}
+	; 	else
+	; 		return false;
+	; }
+
+	Calculate_v2()
 	{
-		this.Search()
-
-		MsgBox, % this.Aim.X "x" this.Aim.Y
-		Loop
-		{
-			PixelGetColor, OutputVar, this.Aim.X + A_Index, this.Aim.Y, RGB
-			finalX := this.Aim.X + A_Index
-		} Until OutputVar != 0xFF0013
-
-		MsgBox, % finalX
-
-		snap := new CGdipSnapshot(this.Aim.X, this.Aim.Y, finalX - this.Aim.X, this.Y2 - this.Y1)
-		snap.TakeSnapshot()
-		snap.PixelScreen[x, y].rgb
-		;snap.SaveSnapshot("myfile.png")		; PNG format
-
-
-		/*
-		x := this.X1, y := this.Y1
-		snap := new CGdipSnapshot(this.X1, this.Y1, this.X2 - this.X1, this.Y2 - this.Y1)
-		snap.TakeSnapshot()
-
-		; get the coordinate of left health bar
-		found := snap.PixelScreen[x, y].rgb
-		While, found != this.ColorID
-		{
-			x++
-			If ( x = this.X2 )
-			{
-				y++
-				x := this.X1
-			}
-			If ( y = this.Y2 )
-				Break
-
-			MouseMove, x, y
-			;ToolTip, % x "x" y "`n" snap.PixelSnap[x, y].rgb
-			found := snap.PixelSnap[x, y].rgb
-		}
-		MouseMove, x, y
-		*/
-	}
-
-	isRed(Var)
-	{
-		; static min := {R: 150, G: 0, B:= 0}, max := {R: 255, G: 75, B:= 90}
-
-		; Var := SubStr(Var, 3)
-
-
-		; if (pixel.rgbRed >= minR && pixel.rgbRed <= maxR &&
-		; 	pixel.rgbGreen >= minG && pixel.rgbGreen <= maxG &&
-		; 	pixel.rgbBlue >= minB && pixel.rgbBlue <= maxB)
-		; {
-		; 	return true;
-		; }
-		; else
-		; 	return false;
-	}
-
-	Calculate_v2(Sensitivity := 7)
-	{
-		this.headX := 42 + this.xa*3
-		this.headY := 80 + this.ya*5
-		this.Aim.X := (this.Aim.X - A_ScreenWidth/2 + this.headX) / (Sensitivity/10)
-		this.Aim.Y := (this.Aim.Y - A_ScreenHeight/2 + this.headY) / (Sensitivity/10)
-
-		If ( Abs(this.Aim.Y) < 3 ) && ( Abs(this.Aim.X) < 1 )
+		If ( this.AntiShake() )
 			Return
+
+		this.Aim.X := Floor( (this.Aim.X - A_ScreenWidth/2 + this.headX) * this.offset )
+		this.Aim.Y := Floor( (this.Aim.Y - A_ScreenHeight/2 + this.headY) * this.offset )
 
 		this.MoveMouse(this.Aim.X, this.Aim.Y)
 	}
 
-	Calculate(Sensitivity := 10)
+	AntiShake()
+	{
+		static block := {x: 3, y: 2}
+
+		x := Abs( this.Aim.X - A_ScreenWidth/2 )
+		y := Abs( this.Aim.Y - A_ScreenHeight/2 )
+
+		If ( x < block.x ) && ( y < block.y )
+			Return True
+
+		Return False
+	}
+
+	Calculate(Sensitivity := 10) ;will be deprecated
 	{
 		this.moveToRight := False
 		this.headX := 42 + this.xa*3
@@ -176,9 +199,18 @@
 		this.MoveMouse(this.MoveX, this.MoveY)
 	}
 
-	MoveMouse(X, Y)
+	MoveMouse(x, y, Humanizer := 0)
 	{
-		Return this.MouseAlloc.(1, X, Y)
+		Return this.MouseAlloc.(1, x, y)
+		;Return Humanizer ? this.Humanizer(x, y) : this.MouseAlloc.(1, x, y)
+	}
+	
+	Humanizer(x, y, speed := 10) ;Work in progress
+	{
+		; Loop, % speed
+		; {
+		; 	this.MouseAlloc.(1, x/(speed), y/(speed))
+		; }
 	}
 }
 
