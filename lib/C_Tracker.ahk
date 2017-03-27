@@ -1,6 +1,6 @@
-﻿Class Tracker
+Class Tracker
 {
-	__New(InGameSensi := 4, Humanizer := 10)
+	__New()
 	{
 		this.MouseAlloc := DynaCall("mouse_event", ["iiiii"], 1, _X := "", _Y := "")
 
@@ -9,10 +9,6 @@
 		this.headX := 41 + this.xa*3
 		this.headY := 77 + this.ya*5
 		;this.LtoRaddendOffset := 1.2
-
-		this.InGameSensi := InGameSensi
-		this.Humanizer := Humanizer / 10
-		this.offset := ( 0.116 * ( this.InGameSensi * (16 / 5) ) ) * this.Humanizer
 
 		this.X1 := (A_ScreenWidth)/2 - (A_ScreenWidth)/5
 		this.Y1 := (A_ScreenHeight)/2 - (A_ScreenHeight)/4
@@ -149,10 +145,14 @@
 	; 		return false;
 	; }
 
-	Calculate_v2()
+	Calculate_v2(Sensitivity := 10)
 	{
 		If ( this.AntiShake() )
 			Return
+
+		; this.InGameSensi := InGameSensi
+		; this.Humanizer := Humanizer / 10
+		this.offset := ( 0.116 * ( Sensitivity * (16 / 5) ) ) ; * this.Humanizer
 
 		this.Aim.X := Floor( (this.Aim.X - A_ScreenWidth/2 + this.headX) * this.offset )
 		this.Aim.Y := Floor( (this.Aim.Y - A_ScreenHeight/2 + this.headY) * this.offset )
@@ -162,10 +162,10 @@
 
 	AntiShake()
 	{
-		static block := {x: 3, y: 2}
+		static block := {x: 8, y: 5}
 
-		x := Abs( this.Aim.X - A_ScreenWidth/2 )
-		y := Abs( this.Aim.Y - A_ScreenHeight/2 )
+		x := Abs( (this.Aim.X - A_ScreenWidth/2 + this.headX) )
+		y := Abs( (this.Aim.Y - A_ScreenHeight/2 + this.headY) )
 
 		If ( x <= block.x ) && ( y <= block.y )
 			Return True
@@ -213,5 +213,6 @@
 		; }
 	}
 }
+
 
 #Include %A_LineFile%\..\CGdipSnapshot.ahk
