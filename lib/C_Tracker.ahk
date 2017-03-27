@@ -50,56 +50,104 @@
 			PixelSearch, OutputVarX, OutputVarY, this.X1, this.Y1, this.X2, this.Y2, this.ColorID, this.ColorVariation, Fast RGB
 		} Until ErrorLevel = 0
 
-		this.AimPixelX := OutputVarX
-		this.AimPixelY := OutputVarY
+		this.Aim := {X: OutputVarX, Y: OutputVarY}
 
-		; snap := new CGdipSnapshot(AimPixelX,AimPixelY,150,150)
-		; snap.TakeSnapshot()
-		; Loop, 150
-		; {
-		; 	Tick := snap.PixelScreen[AimPixelX + A_Index, AimPixelY].rgb
-		; 	snap.TakeSnapshot(
+	}
 
-		; 	;ToolTip, % Tick "`n" this.ColorID
-		; 	If ( Tick := !(this.ColorID) )
-		; 	{
-		; 		snap.SetCoords({w:AimPixelX + A_Index})
-		; 		Break
-		; 	}
-		; }
+	PixelSeach()
+	{
+		snap := new CGdipSnapshot(this.X1, this.Y1, this.X2 - this.X1, this.Y2 - this.Y1)
+		snap.TakeSnapshot()
+
+		x := this.X1
+		y := this.Y1
+		Loop
+		{
+			x++
+			If ( x = this.X2 - this.X1 ) {
+				x := this.X1
+				y++
+			}
+			snap.PixelScreen[x, y].rgb
+		} Until snap.PixelScreen[x, y].rgb = this.ColorID
 		
-		; snap.SaveSnapshot("Snap.png")
-		
-		; snap.SaveSnapshot(AimPixelX "x" AimPixelY ".png")
-
-		;Return {X: this.AimPixelX, Y: this.AimPixelY}
+		MsgBox, % snap.PixelScreen[x, y].rgb
+		MouseMove, x, y
 	}
 
 	Search_v2()
 	{
-		snap := new CGdipSnapshot(this.X1, this.Y1, this.X2, this.Y2)
-		snap.TakeSnapshot()
+		this.Search()
+
+		MsgBox, % this.Aim.X "x" this.Aim.Y
 		Loop
 		{
-			x := 0
-			y := 0
-			foundHadle := snap.PixelSnap[x, y].rgb
-			
-		} 
-		snap.PixelSnap[0,0].rgb
+			PixelGetColor, OutputVar, this.Aim.X + A_Index, this.Aim.Y, RGB
+			finalX := this.Aim.X + A_Index
+		} Until OutputVar != 0xFF0013
+
+		MsgBox, % finalX
+
+		snap := new CGdipSnapshot(this.Aim.X, this.Aim.Y, finalX - this.Aim.X, this.Y2 - this.Y1)
+		snap.TakeSnapshot()
+		snap.PixelScreen[x, y].rgb
+		;snap.SaveSnapshot("myfile.png")		; PNG format
+
+
+		/*
+		x := this.X1, y := this.Y1
+		snap := new CGdipSnapshot(this.X1, this.Y1, this.X2 - this.X1, this.Y2 - this.Y1)
+		snap.TakeSnapshot()
+
+		; get the coordinate of left health bar
+		found := snap.PixelScreen[x, y].rgb
+		While, found != this.ColorID
+		{
+			x++
+			If ( x = this.X2 )
+			{
+				y++
+				x := this.X1
+			}
+			If ( y = this.Y2 )
+				Break
+
+			MouseMove, x, y
+			;ToolTip, % x "x" y "`n" snap.PixelSnap[x, y].rgb
+			found := snap.PixelSnap[x, y].rgb
+		}
+		MouseMove, x, y
+		*/
+	}
+
+	isRed(Var)
+	{
+		; static min := {R: 150, G: 0, B:= 0}, max := {R: 255, G: 75, B:= 90}
+
+		; Var := SubStr(Var, 3)
+
+
+		; if (pixel.rgbRed >= minR && pixel.rgbRed <= maxR &&
+		; 	pixel.rgbGreen >= minG && pixel.rgbGreen <= maxG &&
+		; 	pixel.rgbBlue >= minB && pixel.rgbBlue <= maxB)
+		; {
+		; 	return true;
+		; }
+		; else
+		; 	return false;
 	}
 
 	Calculate_v2(Sensitivity := 7)
 	{
 		this.headX := 42 + this.xa*3
 		this.headY := 80 + this.ya*5
-		this.AimPixelX := (this.AimPixelX - A_ScreenWidth/2 + this.headX) / (Sensitivity/10)
-		this.AimPixelY := (this.AimPixelY - A_ScreenHeight/2 + this.headY) / (Sensitivity/10)
+		this.Aim.X := (this.Aim.X - A_ScreenWidth/2 + this.headX) / (Sensitivity/10)
+		this.Aim.Y := (this.Aim.Y - A_ScreenHeight/2 + this.headY) / (Sensitivity/10)
 
-		If ( Abs(this.AimPixelY) < 3 ) && ( Abs(this.AimPixelX) < 1 )
+		If ( Abs(this.Aim.Y) < 3 ) && ( Abs(this.Aim.X) < 1 )
 			Return
 
-		this.MoveMouse(this.AimPixelX, this.AimPixelY)
+		this.MoveMouse(this.Aim.X, this.Aim.Y)
 	}
 
 	Calculate(Sensitivity := 10)
@@ -107,8 +155,8 @@
 		this.moveToRight := False
 		this.headX := 42 + this.xa*3
 		this.headY := 90 + this.ya*5 
-		this.AimX := this.AimPixelX - A_ScreenWidth/2 + this.headX
-		this.AimY := this.AimPixelY - A_ScreenHeight/2 + this.headY
+		this.AimX := this.Aim.X - A_ScreenWidth/2 + this.headX
+		this.AimY := this.Aim.Y - A_ScreenHeight/2 + this.headY
 		If ( this.AimX+4 > 0 ) {
 			this.DirX := Sensitivity / 10
 			this.moveToRight := True
