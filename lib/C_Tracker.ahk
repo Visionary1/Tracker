@@ -167,7 +167,7 @@
 		x := Abs( this.Aim.X - A_ScreenWidth/2 )
 		y := Abs( this.Aim.Y - A_ScreenHeight/2 )
 
-		If ( x < block.x ) && ( y < block.y )
+		If ( x <= block.x ) && ( y <= block.y )
 			Return True
 
 		Return False
