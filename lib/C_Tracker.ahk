@@ -3,7 +3,9 @@ Class Tracker
 	__New()
 	{
 		this.MouseAlloc := DynaCall("mouse_event", ["iiiii"], 1, _X := "", _Y := "")
-
+		this.buffer := new hHookMouse(Func("__hHookMouse"))
+		
+		this.bufferflag := 0
 		; this.xa := 1
 		; this.ya := -3
 		xa := 1
@@ -153,6 +155,8 @@ Class Tracker
 
 	Calculate_v2(Sensitivity := 10)
 	{
+		this.bufferflag := True
+
 		x := this.Aim.X + this.offset.x
 		y := this.Aim.Y + this.offset.y
 
@@ -207,7 +211,8 @@ Class Tracker
 
 	MoveMouse(x, y, Humanizer := 0)
 	{
-		Return this.MouseAlloc.(1, x, y)
+		this.MouseAlloc.(1, x, y)
+		this.bufferflag := False
 		;Return Humanizer ? this.Humanizer(x, y) : this.MouseAlloc.(1, x, y)
 	}
 	
@@ -220,4 +225,6 @@ Class Tracker
 	}
 }
 
-#Include %A_LineFile%\..\CGdipSnapshot.ahk
+
+;#Include %A_LineFile%\..\CGdipSnapshot.ahk
+#Include %A_LineFile%\..\C_hHook.ahk
