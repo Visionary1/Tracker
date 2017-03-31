@@ -3,16 +3,19 @@ Class Tracker
 	__New()
 	{
 		this.MouseAlloc := DynaCall("mouse_event", ["iiiii"], 1, _X := "", _Y := "")
-		this.buffer := new hHookMouse(Func("__hHookMouse"))
-		
-		this.bufferflag := 0
+		this.MouseSpeed := new SetMouseSpeed(10)
+
+		; this.buffer := new hHookMouse(Func("__hHookMouse"))
+		; this.buffer := new hHookKeybd(Func("__hHookKeybd"))
+		; this.bufferflag := 0
+
 		; this.xa := 1
 		; this.ya := -3
 		xa := 1
 		ya := -3
 		this.offset := {dx: 0.3712
 			, x: (41 + xa * 3) - A_ScreenWidth/2
-			, y: (77 + ya * 5) - A_ScreenHeight/2}
+			, y: (85 + ya * 5) - A_ScreenHeight/2}
 
 		; this.headX := (41 + this.xa * 3) - A_ScreenWidth/2
 		; this.headY := (77 + this.ya * 5) - A_ScreenHeight/2
@@ -155,7 +158,7 @@ Class Tracker
 
 	Calculate_v2(Sensitivity := 10)
 	{
-		this.bufferflag := True
+		; this.bufferflag := True
 
 		x := this.Aim.X + this.offset.x
 		y := this.Aim.Y + this.offset.y
@@ -172,7 +175,7 @@ Class Tracker
 
 	AntiShake(x, y)
 	{
-		static block := {x: 8, y: 5}
+		static block := {x: 12, y: 6}
 
 		; x := Abs( (this.Aim.X - A_ScreenWidth/2 + this.headX) )
 		; y := Abs( (this.Aim.Y - A_ScreenHeight/2 + this.headY) )
@@ -211,8 +214,9 @@ Class Tracker
 
 	MoveMouse(x, y, Humanizer := 0)
 	{
-		this.MouseAlloc.(1, x, y)
-		this.bufferflag := False
+		Return this.MouseAlloc.(1, x, y)
+		;this.MouseAlloc.(1, x, y)
+		; this.bufferflag := False
 		;Return Humanizer ? this.Humanizer(x, y) : this.MouseAlloc.(1, x, y)
 	}
 	
@@ -226,5 +230,6 @@ Class Tracker
 }
 
 
-;#Include %A_LineFile%\..\CGdipSnapshot.ahk
+#Include %A_LineFile%\..\CGdipSnapshot.ahk
 #Include %A_LineFile%\..\C_hHook.ahk
+#Include %A_LineFile%\..\SetMouseSpeed.ahk
