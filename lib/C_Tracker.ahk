@@ -170,7 +170,7 @@ Class Tracker
 		; this.Humanizer := Humanizer / 10
 		; this.offset.ingame := ( 0.116 * ( Sensitivity * (16 / 5) ) ) ; * this.Humanizer
 
-		this.MoveMouse(Floor( x * this.offset.dx * Sensitivity ), Floor( y * this.offset.dx * Sensitivity ))
+		this.MoveMouse( (x * this.offset.dx * Sensitivity), (y * this.offset.dx * Sensitivity) )
 	}
 
 	AntiShake(x, y)
@@ -214,7 +214,7 @@ Class Tracker
 
 	MoveMouse(x, y, Humanizer := 0)
 	{
-		Return this.MouseAlloc.(1, x, y)
+		Return this.MouseAlloc.(1, Floor(x), Floor(y))
 		;this.MouseAlloc.(1, x, y)
 		; this.bufferflag := False
 		;Return Humanizer ? this.Humanizer(x, y) : this.MouseAlloc.(1, x, y)
