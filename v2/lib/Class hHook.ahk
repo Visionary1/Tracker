@@ -2,102 +2,112 @@
 {
 	static WH_MOUSE_LL := 14, WH_KEYBOARD_LL := 13
 
-	UnHook(hHook)
-	{
+	UnHook(hHook) {
 		this.UnhookWindowsHookEx(hHook)
 	}
 
-	UnhookWindowsHookEx(hHook)
-	{
+	UnhookWindowsHookEx(hHook) {
 		Return DllCall("UnhookWindowsHookEx", "Uint", hHook)
 	}
 
-	CallNextHookEx(nCode, wParam, lParam, hHook = 0)
-	{
+	CallNextHookEx(nCode, wParam, lParam, hHook = 0) {
 		Return DllCall("CallNextHookEx", "Uint", hHook, "int", nCode, "Uint", wParam, "Uint", lParam)
 	}
 
-	SetWindowsHookEx(idHook, pfn)
-	{
+	SetWindowsHookEx(idHook, pfn) {
 		Return DllCall("SetWindowsHookEx", "int", idHook, "Uint", pfn, "Uint", DllCall("GetModuleHandle", "Uint", 0), "Uint", 0)
 	}
 }
 
 Class hHookMouse extends hHook
 {
-	__New(Func)
-	{
+	__New(Func) {
 		this.Mouse := this.SetWindowsHookEx(base.WH_MOUSE_LL, RegisterCallback(Func, "Fast"))
 	}
 
-	__Delete()
-	{
+	__Delete() {
 		this.UnHook(this.Mouse)
 	}
 }
 
 Class hHookKeybd extends hHook
 {
-	__New(Func)
-	{
+	__New(Func) {
 		this.Keybd := this.SetWindowsHookEx(base.WH_KEYBOARD_LL, RegisterCallback(Func, "Fast"))
 	}
 
-	__Delete()
-	{
+	__Delete() {
 		this.UnHook(this.Keybd)
 	}
+
+	Hello()
+	{
+		msgbox, hi
+	}
+
+}
+
+#NoEnv
+SetBatchLines, -1
+#Persistent
+keybdproc := new hHookKeybd(Func("AdjustHook"))
+;mouseproc := new hHookMouse(Func("__hHookMouse"))
+Return
+
+AdjustHook(nCode, wParam, lParam)
+{
+	static temp := new Tracker()
+
+	Critical
+
+	SetFormat, IntegerFast, H
+
+	If (wParam = 0x100)  ; WM_KEYDOWN
+	{
+		;KeyName := GetKeyName("vk" NumGet(lParam+0, 0))
+		If ( GetKeyName("vk" NumGet(lParam+0, 0)) = "LShift" )
+		{
+			temp.Search()
+			temp.Calculate(4.5)
+		}
+	}
+
+
+	Return hHook.CallNextHookEx(nCode, wParam, lParam)
 }
 
 __hHookKeybd(nCode, wParam, lParam)
 {
-	global Application
-
 	Critical
-
-	SetFormat, Integer, H
+	SetFormat, IntegerFast, H
 	If ((wParam = 0x100)  ; WM_KEYDOWN
 	|| (wParam = 0x101))  ; WM_KEYUP
 	{
 		KeyName := GetKeyName("vk" NumGet(lParam+0, 0))
 		Tooltip, % (wParam = 0x100) ? KeyName " Down" : KeyName " Up"
-
-		If (KeyName = "LShift")
-		{
-			Application.OW.Search(), Application.OW.Calculate_v2(5.5)
-		}
-
 	}
+
+
 	Return hHook.CallNextHookEx(nCode, wParam, lParam)
 }
 
 __hHookMouse(nCode, wParam, lParam)
 {
-	;global Application
-	;Critical
-	;SetFormat, Integer, D
-	; If (wParam = 0x201)
-	; {
-	; 	; If ( Application.OW.bufferflag )
-	; 	; {
-	; 	; 	Return
-	; 	; }
-	; 	ToolTip, 누름
-	; 	;Return -1 ; here goes the code
-	; 	return -1
-	; }
-	; If (wParam = 0x202)
-	; 	return -1
-	If !nCode && (wParam = 0x200)
-	Tooltip, % " X: " . NumGet(lParam+0, 0, "int")
-	. " Y: " . NumGet(lParam+0, 4, "int")
-	
+	Critical
+
+	SetFormat, IntegerFast, D
+
+	If !nCode && (wParam = 0x201)
+	{
+			tooltip, pressed
+
+	}
+
 	Return hHook.CallNextHookEx(nCode, wParam, lParam)
 }
 
-#Persistent
-tmp := new hHookKeybd(ObjBindMethod(Test, "Keybd"))
-Return
+#Include, Class Tracker.ahk
+
 
 
 

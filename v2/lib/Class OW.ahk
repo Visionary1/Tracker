@@ -30,7 +30,9 @@
 				["Alt", Buttons.SuspendKey.Bind(Buttons)]
 			]], ["Sensitivity", [
 				["1", Buttons.Sensitivity.Bind(Buttons)],
+				["1.5", Buttons.Sensitivity.Bind(Buttons)],
 				["2", Buttons.Sensitivity.Bind(Buttons)],
+				["2.5", Buttons.Sensitivity.Bind(Buttons)],
 				["3", Buttons.Sensitivity.Bind(Buttons)],
 				["3.5", Buttons.Sensitivity.Bind(Buttons)],
 				["4", Buttons.Sensitivity.Bind(Buttons)],
@@ -242,7 +244,7 @@
 			If ( this.Tracker.Firing(this.AimKey) )
 			{
 				;ToolTip, % this.AimKey "`n" this.Sensitivity
-				this.Tracker.Search(), this.Tracker.Calculate_v2(this.Sensitivity)
+				this.Tracker.Search(), this.Tracker.Calculate(this.Sensitivity)
 				Sleep, % Tick
 			}
 		}
@@ -352,6 +354,7 @@
 	}
 
 	GuiClose() {
+		this.Tracker := ""
 		; Relase wm_message hooks
 		For each, Msg in [0x200, 0x201, 0x202, 0x2A3]
 			OnMessage(Msg, this.Bound.OnMessage, 0)

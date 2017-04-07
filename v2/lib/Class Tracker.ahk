@@ -22,6 +22,11 @@
 		this.ColorVariation := 0
 	}
 
+	__Delete() {
+		this.MouseAlloc := ""
+		this.MouseSpeed := ""
+	}
+
 	Firing(Key) {
 		Return GetKeyState(Key, "P")
 	}
@@ -34,7 +39,7 @@
 		this.Aim := {X: OutputVarX, Y: OutputVarY}
 	}
 
-	Calculate(Sensitivity := 10) {
+	Calculate(Sensitivity) {
 		x := this.Aim.X + this.offset.x
 		y := this.Aim.Y + this.offset.y
 
@@ -53,7 +58,7 @@
 		Return 0
 	}
 
-	MoveMouse(x, y, Humanizer := 0) {
+	MoveMouse(x, y) {
 		Return this.MouseAlloc.(1, Floor(x), Floor(y))
 	}
 }
