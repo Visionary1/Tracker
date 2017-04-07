@@ -11,9 +11,12 @@
 		; xa := 1
 		; ya := -3
 		this.offset := {dx: 0.3712
-			, x: 0.022916666667 - A_ScreenWidth/2  ;x: (41 + xa * 3) - A_ScreenWidth/2
-			, y: 0.064814814815 - A_ScreenHeight/2} ;(85 + ya * 5) - A_ScreenHeight/2}
+			, x: 0.477083333333 * A_ScreenWidth  ;x: (41 + xa * 3) - A_ScreenWidth/2
+			, y: 0.435185185185 * A_ScreenHeight} ;(85 + ya * 5) - A_ScreenHeight/2}
 
+			; 0.022916666667 * A_ScreenWidth - A_ScreenWidth/2
+			; 0.477083333333 * A_ScreenWidth
+			; 0.435185185185 * A_ScreenHeight
 
 
 		this.X1 := (A_ScreenWidth)/2 - (A_ScreenWidth)/5
@@ -38,12 +41,12 @@
 			PixelSearch, OutputVarX, OutputVarY, this.X1, this.Y1, this.X2, this.Y2, this.ColorID, this.ColorVariation, Fast RGB
 		} Until ErrorLevel = 0
 
-		this.Aim := {X: OutputVarX, Y: OutputVarY}
+		this.Aim := {x: OutputVarX, y: OutputVarY}
 	}
 
 	Calculate(Sensitivity) {
-		x := this.Aim.X + this.offset.x
-		y := this.Aim.Y + this.offset.y
+		x := this.Aim.x + this.offset.x
+		y := this.Aim.y + this.offset.y
 
 		If ( this.AntiShake(x, y) )
 			Return
