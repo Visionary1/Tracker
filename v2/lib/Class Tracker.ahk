@@ -8,11 +8,13 @@
 		; this.buffer := new hHookKeybd(Func("__hHookKeybd"))
 		; this.bufferflag := 0
 
-		xa := 1
-		ya := -3
+		; xa := 1
+		; ya := -3
 		this.offset := {dx: 0.3712
-			, x: (41 + xa * 3) - A_ScreenWidth/2
-			, y: (85 + ya * 5) - A_ScreenHeight/2}
+			, x: 0.022916666667 - A_ScreenWidth/2  ;x: (41 + xa * 3) - A_ScreenWidth/2
+			, y: 0.064814814815 - A_ScreenHeight/2} ;(85 + ya * 5) - A_ScreenHeight/2}
+
+
 
 		this.X1 := (A_ScreenWidth)/2 - (A_ScreenWidth)/5
 		this.Y1 := (A_ScreenHeight)/2 - (A_ScreenHeight)/4
