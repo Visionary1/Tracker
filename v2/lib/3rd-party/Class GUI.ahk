@@ -26,6 +26,10 @@
 			GuiControl, +g, % ControlHWND, % Function ; ty geekdude for this amazing godsent knowledge, may the darkness of labels be eternally abolished
 		Return ControlHWND
 	}
+
+	Release_glabel(hwnd) {
+		GuiControl, -g, % hwnd
+	}
 	
 	Control(Command := "", Control := "", ControlParams := "") {
 		GuiControl % this.hwnd ":" Command, % Control, % ControlParams

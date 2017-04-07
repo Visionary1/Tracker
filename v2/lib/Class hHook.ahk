@@ -39,41 +39,6 @@ Class hHookKeybd extends hHook
 	__Delete() {
 		this.UnHook(this.Keybd)
 	}
-
-	Hello()
-	{
-		msgbox, hi
-	}
-
-}
-
-#NoEnv
-SetBatchLines, -1
-#Persistent
-keybdproc := new hHookKeybd(Func("AdjustHook"))
-;mouseproc := new hHookMouse(Func("__hHookMouse"))
-Return
-
-AdjustHook(nCode, wParam, lParam)
-{
-	static temp := new Tracker()
-
-	Critical
-
-	SetFormat, IntegerFast, H
-
-	If (wParam = 0x100)  ; WM_KEYDOWN
-	{
-		;KeyName := GetKeyName("vk" NumGet(lParam+0, 0))
-		If ( GetKeyName("vk" NumGet(lParam+0, 0)) = "LShift" )
-		{
-			temp.Search()
-			temp.Calculate(4.5)
-		}
-	}
-
-
-	Return hHook.CallNextHookEx(nCode, wParam, lParam)
 }
 
 __hHookKeybd(nCode, wParam, lParam)
@@ -105,8 +70,6 @@ __hHookMouse(nCode, wParam, lParam)
 
 	Return hHook.CallNextHookEx(nCode, wParam, lParam)
 }
-
-#Include, Class Tracker.ahk
 
 
 

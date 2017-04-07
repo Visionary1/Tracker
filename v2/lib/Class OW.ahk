@@ -1,9 +1,10 @@
 ﻿Class OW
 {
 	__New() {
-		this.parsed := JSON.Load(DownloadToStr("https://raw.githubusercontent.com/Visionary1/Tracker/master/info.json"))
+		
+		parsed := JSON.Load(DownloadToStr("https://raw.githubusercontent.com/Visionary1/Tracker/master/info.json"))
 
-		Window := {Width: 500, Height: 300, Title: this.parsed.title, StatusBarText: this.parsed.StatusBarText}
+		Window := {Width: 500, Height: 300, Title: parsed.title, StatusBarText: parsed.StatusBarText}
 
 		this.Canvas := new GUI("Canvas", "+LastFound -Resize -Caption -Border")
 		this.Canvas.Color("FFFFFF")
@@ -29,6 +30,7 @@
 				["F1", Buttons.SuspendKey.Bind(Buttons)],
 				["Alt", Buttons.SuspendKey.Bind(Buttons)]
 			]], ["Sensitivity", [
+				["0.5", Buttons.Sensitivity.Bind(Buttons)],
 				["1", Buttons.Sensitivity.Bind(Buttons)],
 				["1.5", Buttons.Sensitivity.Bind(Buttons)],
 				["2", Buttons.Sensitivity.Bind(Buttons)],
@@ -219,11 +221,6 @@
 		VarSetCapacity(this.TME, 16, 0), NumPut(16, this.TME, 0), NumPut(2, this.TME, 4), NumPut(hGui1, this.TME, 8)
 	}
 
-	__Delete() {
-		this.GuiClose()
-		this.CloseCallback()
-	}
-
 	RegisterCloseCallback(CloseCallback) {
 		this.CloseCallback := CloseCallback
 	}
@@ -231,23 +228,32 @@
 	initialize() {
 		this.Canvas.Control("Hide", this.StartBtn)
 		this.Canvas.Control("Show", this.BoardMsg)
-		this.Tracker := new Tracker()
-		pn := new PureNotify(this.Tracker.X1, this.Tracker.Y1, (this.Tracker.X2 - this.Tracker.X1), (this.Tracker.Y2 - this.Tracker.Y1))
-		pn.Text("initialize"
-		, "Searching area (" Floor(this.Tracker.X2 - this.Tracker.X1) "x" Floor(this.Tracker.Y2 - this.Tracker.Y1) ")`n`nAim  " this.AimKey "`nSus  " this.SuspendKey "`nSensitivity  " this.Sensitivity)
-		Sleep, 4000
-		pn := ""
-		Tick := A_IsCompiled ? SubStr(A_ScriptName, 1, -4) : 0
 
-		Loop,
+		this.Tracker := new Tracker()
+
+		this.pn := new PureNotify(this.Tracker.X1, this.Tracker.Y1, (this.Tracker.X2 - this.Tracker.X1), (this.Tracker.Y2 - this.Tracker.Y1))
+		this.pn.Text("initializing..."
+		, "Searching area (" (this.Tracker.X2 - this.Tracker.X1) "x" (this.Tracker.Y2 - this.Tracker.Y1) ")`n`nAim  " this.AimKey "`nSus  " this.SuspendKey "`nSensitivity  " this.Sensitivity)
+		Sleep, 4000
+		this.Delete("pn")
+		;Tick := A_IsCompiled ? SubStr(A_ScriptName, 1, -4) : 0
+
+		this.Bound.__Run := new QuasiThread(ObjBindMethod(this, "__Run"))
+		this.Bound.__Run.Start(10)
+	}
+
+	;reserved for internal use
+	__Run() { 
+		If ( this.Tracker.Firing(this.AimKey) )
 		{
-			If ( this.Tracker.Firing(this.AimKey) )
-			{
-				;ToolTip, % this.AimKey "`n" this.Sensitivity
-				this.Tracker.Search(), this.Tracker.Calculate(this.Sensitivity)
-				Sleep, % Tick
-			}
+			;ToolTip, % this.AimKey "`n" this.Sensitivity
+			this.Tracker.Calculate(this.Sensitivity)
 		}
+	}
+
+	;reserved for internal use
+	__Pause() {
+		Pause, Toggle, 1
 	}
 
 	OnMessage(wParam, lParam, Msg, hWnd) {
@@ -256,13 +262,13 @@
 			MouseGetPos,,,, MouseCtrl, 2
 
 			If (Msg == 0x200)
-				this.WM_MOUSEMOVE(MouseCtrl)
+				Return this.WM_MOUSEMOVE(MouseCtrl)
 			Else If (Msg == 0x201)
-				this.WM_LBUTTONDOWN(MouseCtrl)
+				Return this.WM_LBUTTONDOWN(MouseCtrl)
 			Else If (Msg == 0x202)
-				this.WM_LBUTTONUP(MouseCtrl)
+				Return this.WM_LBUTTONUP(MouseCtrl)
 			Else If (Msg == 0x2A3)
-				this.WM_MOUSELEAVE()
+				Return this.WM_MOUSELEAVE()
 		}
 	}
 
@@ -308,7 +314,7 @@
 				GuiControl, Show, % this.hButtonRestoreN
 			}
 		} Else If (MouseCtrl = this.hButtonCloseP) {
-			this.__Delete()
+			this.GuiClose()
 		} Else If (MouseCtrl = this.hButtonMenuFileText) {
 			ControlGetPos, ctlX, ctlY, ctlW, ctlH, , % "ahk_id " this.hButtonMenuFileText
 			Menu, OW_1, Show, %ctlX%, % ctlY + ctlH
@@ -354,20 +360,26 @@
 	}
 
 	GuiClose() {
-		this.Tracker := ""
+		
+		HotKey.Disable(this.SuspendKey)
 		; Relase wm_message hooks
 		For each, Msg in [0x200, 0x201, 0x202, 0x2A3]
 			OnMessage(Msg, this.Bound.OnMessage, 0)
 
+		this.Tracker := ""
+		this.Bound.__Run.__Delete()
 		this.Delete("Bound")
-		
 		WinEvents.Unregister(this.Canvas.hwnd)
 		
+		this.Canvas.Release_glabel(this.StartBtn)
 		this.Canvas.Destroy()
+
 		; Release menu bar (Has to be done after Gui, Destroy)
 		For each, MenuName in this.Menus
 			Menu, %MenuName%, DeleteAll
+
 		this.Canvas := ""
+		this.CloseCallback()
 	}
 
 	GuiSize() {
@@ -425,13 +437,16 @@
 
 		SuspendKey() {
 			this.__Toggle(this.Parent.SuspendKey)
+
+			If (this.Parent.SuspendKey)
+				HotKey.Rebind(this.Parent.SuspendKey, A_ThisMenuItem)
+			Else
+				Hotkey.Bind(A_ThisMenuItem, ObjBindMethod(this.Parent, "__Pause"))
+
 			this.Parent.SuspendKey := A_ThisMenuItem
 
-			HotKey1 := A_ThisMenuItem
-			Hotkey, %HotKey1%, Pause
-
-			For Key, Value in ["CapsLock", "MButton", "F1", "Alt"]
-				Menu, % A_ThisMenu, Disable, % Value
+			; For Key, Value in ["CapsLock", "MButton", "F1", "Alt"]
+			; 	Menu, % A_ThisMenu, Disable, % Value
 
 			this.__Ready()
 		}
@@ -442,14 +457,12 @@
 			this.__Ready()
 		}
 
-		__Toggle(Item)
-		{
+		__Toggle(Item) {
 			try Menu, % A_ThisMenu, UnCheck, % Item
 			Menu, % A_ThisMenu, ToggleCheck, % A_ThisMenuItem
 		}
 
-		__Ready()
-		{
+		__Ready() {
 			static ReadyFlag := 0
 
 			If (this.Parent.AimKey) && (this.Parent.SuspendKey) && (this.Parent.Sensitivity) && !(Readyflag) {
@@ -461,7 +474,12 @@
 	}
 }
 
+
 #Include %A_LineFile%\..\Class Tracker.ahk
+#Include %A_LineFile%\..\Class hHook.ahk
 #Include %A_LineFile%\..\3rd-party\Class GUI.ahk
+#Include %A_LineFile%\..\3rd-party\Class WinEvents.ahk
+#Include %A_LineFile%\..\3rd-party\Class HotKey.ahk
 #Include %A_LineFile%\..\3rd-party\Class JSON.ahk
+#Include %A_LineFile%\..\3rd-party\Class QuasiThread.ahk
 #Include %A_LineFile%\..\3rd-party\Func DownloadToString.ahk
