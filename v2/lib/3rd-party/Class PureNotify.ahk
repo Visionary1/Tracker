@@ -97,7 +97,7 @@
 		DeleteObject(this.hbm) ; Now the bitmap may be deleted
 		DeleteDC(this.hdc) ; Also the device context related to the bitmap may be deleted
 		Gdip_DeleteGraphics(this.G) ; The graphics may now be deleted
-		Gui, Destroy
+		Gui, % this.hwnd ": Destroy"
 	}
 }
 

@@ -12,6 +12,8 @@
 
 		this.Bound := []
 		this.Bound.OnMessage := this.OnMessage.Bind(this)
+		this.Bound.AntiShake := 0
+		this.Bound.Humanizer := 0
 
 		Buttons := new this.MenuButtons(this)
 		Menus :=
@@ -45,6 +47,9 @@
 				["7", Buttons.Sensitivity.Bind(Buttons)],
 				["8", Buttons.Sensitivity.Bind(Buttons)],
 				["9", Buttons.Sensitivity.Bind(Buttons)]
+			]], ["Advanced", [
+				["Anti-Shake", Buttons.AntiShake.Bind(Buttons)],
+				["Humanizer", Buttons.Humanizer.Bind(Buttons)]
 			]]
 		]
 		)
@@ -59,10 +64,6 @@
 
 		For Key, Value in [this.hBorderLeft, this.hBorderRight, this.hBorderBottom]
 			DllCall("SendMessage", "Ptr", Value, "UInt", 0x172, "Ptr", 0, "Ptr", CreateDIB("0072C6", 1, 1))
-
-		; DllCall("SendMessage", "Ptr", this.hBorderLeft, "UInt", 0x172, "Ptr", 0, "Ptr", CreateDIB("0072C6", 1, 1))
-		; DllCall("SendMessage", "Ptr", this.hBorderRight, "UInt", 0x172, "Ptr", 0, "Ptr", CreateDIB("0072C6", 1, 1))
-		; DllCall("SendMessage", "Ptr", this.hBorderBottom, "UInt", 0x172, "Ptr", 0, "Ptr", CreateDIB("0072C6", 1, 1))
 
 		this.hTitleHeader := this.Canvas.Add("Text", "x" 1 " y" 0 " w" Window.Width-2 " h" 67 " +0x4E")
 		DllCall("SendMessage", "Ptr", this.hTitleHeader, "UInt", 0x172, "Ptr", 0, "Ptr", CreateDIB("0173C7", 1, 1))
@@ -103,10 +104,6 @@
 		For Key, Value in {this.hButtonMinimizeN: ButtonMinimizeN, this.hButtonMinimizeH: ButtonMinimizeH, this.hButtonMinimizeP: ButtonMinimizeP}
 			DllCall("SendMessage", "Ptr", Key, "UInt", 0x172, "Ptr", 0, "Ptr", CreateDIB(Value, 46, 31))
 
-		; DllCall("SendMessage", "Ptr", this.hButtonMinimizeN, "UInt", 0x172, "Ptr", 0, "Ptr", CreateDIB(ButtonMinimizeN, 46, 31))
-		; DllCall("SendMessage", "Ptr", this.hButtonMinimizeH, "UInt", 0x172, "Ptr", 0, "Ptr", CreateDIB(ButtonMinimizeH, 46, 31))
-		; DllCall("SendMessage", "Ptr", this.hButtonMinimizeP, "UInt", 0x172, "Ptr", 0, "Ptr", CreateDIB(ButtonMinimizeP, 46, 31))
-
 
 		this.hButtonMaximizeN := this.Canvas.Add("Picture", " x" Window.Width-93 " y" 1 " w" 46 " h" 31 " +0x4E Hidden0")
 		this.hButtonMaximizeH := this.Canvas.Add("Picture", " x" Window.Width-93 " y" 1 " w" 46 " h" 31 " +0x4E Hidden1")
@@ -129,10 +126,6 @@
 		For Key, Value in {this.hButtonMaximizeN: ButtonMaximizeN, this.hButtonMaximizeH: ButtonMaximizeH, this.hButtonMaximizeP: ButtonMaximizeP}
 			DllCall("SendMessage", "Ptr", Key, "UInt", 0x172, "Ptr", 0, "Ptr", CreateDIB(Value, 46, 31))
 
-		; DllCall("SendMessage", "Ptr", this.hButtonMaximizeN, "UInt", 0x172, "Ptr", 0, "Ptr", CreateDIB(ButtonMaximizeN, 46, 31))
-		; DllCall("SendMessage", "Ptr", this.hButtonMaximizeH, "UInt", 0x172, "Ptr", 0, "Ptr", CreateDIB(ButtonMaximizeH, 46, 31))
-		; DllCall("SendMessage", "Ptr", this.hButtonMaximizeP, "UInt", 0x172, "Ptr", 0, "Ptr", CreateDIB(ButtonMaximizeP, 46, 31))
-
 
 		this.hButtonRestoreN := this.Canvas.Add("Picture", " x" Window.Width-93 " y" 1 " w" 46 " h" 31 " +0x4E Hidden1")
 		this.hButtonRestoreH  := this.Canvas.Add("Picture", " x" Window.Width-93 " y" 1 " w" 46 " h" 31 " +0x4E Hidden1")
@@ -154,10 +147,6 @@
 
 		For Key, Value in {this.hButtonRestoreN: ButtonRestoreN, this.hButtonRestoreH: ButtonRestoreH, this.hButtonRestoreP: ButtonRestoreP}
 			DllCall("SendMessage", "Ptr", Key, "UInt", 0x172, "Ptr", 0, "Ptr", CreateDIB(Value, 46, 31))
-
-		; DllCall("SendMessage", "Ptr", this.hButtonRestoreN, "UInt", 0x172, "Ptr", 0, "Ptr", CreateDIB(ButtonRestoreN, 46, 31))
-		; DllCall("SendMessage", "Ptr", this.hButtonRestoreH, "UInt", 0x172, "Ptr", 0, "Ptr", CreateDIB(ButtonRestoreH, 46, 31))
-		; DllCall("SendMessage", "Ptr", this.hButtonRestoreP, "UInt", 0x172, "Ptr", 0, "Ptr", CreateDIB(ButtonRestoreP, 46, 31))
 
 
 		this.hButtonCloseN := this.Canvas.Add("Picture", " x" Window.Width-47 " y" 1 " w" 46 " h" 31 " +0x4E Hidden0")
@@ -184,36 +173,43 @@
 		For Key, Value in {this.hButtonCloseN: ButtonCloseN, this.hButtonCloseH: ButtonCloseH, this.hButtonCloseP: ButtonCloseP}
 			DllCall("SendMessage", "Ptr", Key, "UInt", 0x172, "Ptr", 0, "Ptr", CreateDIB(Value, 46, 31))
 
-		; DllCall("SendMessage", "Ptr", this.hButtonCloseN, "UInt", 0x172, "Ptr", 0, "Ptr", CreateDIB(ButtonCloseN, 46, 31))
-		; DllCall("SendMessage", "Ptr", this.hButtonCloseH, "UInt", 0x172, "Ptr", 0, "Ptr", CreateDIB(ButtonCloseH, 46, 31))
-		; DllCall("SendMessage", "Ptr", this.hButtonCloseP, "UInt", 0x172, "Ptr", 0, "Ptr", CreateDIB(ButtonCloseP, 46, 31))
-
 
 		this.Canvas.Font("s9 cFFFFFF", "Segoe UI")
-		this.hButtonMenuFileN := this.Canvas.Add("Picture", " x" 2 " y" 36 " w" 60 " h" 24 " +0x4E Hidden0")
-		this.hButtonMenuFileH := this.Canvas.Add("Picture", " xp" 0 " yp" 0 " wp" 0 " hp" 0 " +0x4E Hidden1")
-		this.hButtonMenuFileText := this.Canvas.Add("Text", " xp" 0 " yp" 0 " wp" 0 " hp" 0 " +BackgroundTrans +0x201", "Aim")
-		DllCall("SendMessage", "Ptr", this.hButtonMenuFileN, "UInt", 0x172, "Ptr", 0, "Ptr", CreateDIB("0173C7", 1, 1))
-		DllCall("SendMessage", "Ptr", this.hButtonMenuFileH, "UInt", 0x172, "Ptr", 0, "Ptr", CreateDIB("2A8AD4", 1, 1))
+		this.hButtonMenu1N := this.Canvas.Add("Picture", " x" 2 " y" 36 " w" 60 " h" 24 " +0x4E Hidden0")
+		this.hButtonMenu1H := this.Canvas.Add("Picture", " xp" 0 " yp" 0 " wp" 0 " hp" 0 " +0x4E Hidden1")
+		this.hButtonMenu1Text := this.Canvas.Add("Text", " xp" 0 " yp" 0 " wp" 0 " hp" 0 " +BackgroundTrans +0x201", "Aim")
+		;DllCall("SendMessage", "Ptr", this.hButtonMenu1N, "UInt", 0x172, "Ptr", 0, "Ptr", CreateDIB("0173C7", 1, 1))
+		;DllCall("SendMessage", "Ptr", this.hButtonMenu1H, "UInt", 0x172, "Ptr", 0, "Ptr", CreateDIB("2A8AD4", 1, 1))
 
-		this.hButtonMenuEditN := this.Canvas.Add("Picture", " x+" 2 " yp" 0 " w" 60 " h" 24 " +0x4E Hidden0")
-		this.hButtonMenuEditH := this.Canvas.Add("Picture", " xp" 0 " yp" 0 " wp" 0 " hp" 0 " +0x4E Hidden1")
-		this.hButtonMenuEditText := this.Canvas.Add("Text", " xp" 0 " yp" 0 " wp" 0 " hp" 0 " +BackgroundTrans +0x201", "Suspend")
-		DllCall("SendMessage", "Ptr", this.hButtonMenuEditN, "UInt", 0x172, "Ptr", 0, "Ptr", CreateDIB("0173C7", 1, 1))
-		DllCall("SendMessage", "Ptr", this.hButtonMenuEditH, "UInt", 0x172, "Ptr", 0, "Ptr", CreateDIB("2A8AD4", 1, 1))
+		this.hButtonMenu2N := this.Canvas.Add("Picture", " x+" 2 " yp" 0 " w" 60 " h" 24 " +0x4E Hidden0")
+		this.hButtonMenu2H := this.Canvas.Add("Picture", " xp" 0 " yp" 0 " wp" 0 " hp" 0 " +0x4E Hidden1")
+		this.hButtonMenu2Text := this.Canvas.Add("Text", " xp" 0 " yp" 0 " wp" 0 " hp" 0 " +BackgroundTrans +0x201", "Suspend")
+		;DllCall("SendMessage", "Ptr", this.hButtonMenu2N, "UInt", 0x172, "Ptr", 0, "Ptr", CreateDIB("0173C7", 1, 1))
+		;DllCall("SendMessage", "Ptr", this.hButtonMenu2H, "UInt", 0x172, "Ptr", 0, "Ptr", CreateDIB("2A8AD4", 1, 1))
 
-		this.hButtonMenuViewN := this.Canvas.Add("Picture", " x+" 2 " yp" 0 " w" 60 " h" 24 " +0x4E Hidden0")
-		this.hButtonMenuViewH := this.Canvas.Add("Picture", " xp" 0 " yp" 0 " wp" 0 " hp" 0 " +0x4E Hidden1")
-		this.hButtonMenuViewText := this.Canvas.Add("Text", " xp" 0 " yp" 0 " wp" 0 " hp" 0 " +BackgroundTrans +0x201", "Sensitivity")
-		DllCall("SendMessage", "Ptr", this.hButtonMenuViewN, "UInt", 0x172, "Ptr", 0, "Ptr", CreateDIB("0173C7", 1, 1))
-		DllCall("SendMessage", "Ptr", this.hButtonMenuViewH, "UInt", 0x172, "Ptr", 0, "Ptr", CreateDIB("2A8AD4", 1, 1))
+		this.hButtonMenu3N := this.Canvas.Add("Picture", " x+" 2 " yp" 0 " w" 60 " h" 24 " +0x4E Hidden0")
+		this.hButtonMenu3H := this.Canvas.Add("Picture", " xp" 0 " yp" 0 " wp" 0 " hp" 0 " +0x4E Hidden1")
+		this.hButtonMenu3Text := this.Canvas.Add("Text", " xp" 0 " yp" 0 " wp" 0 " hp" 0 " +BackgroundTrans +0x201", "Sensitivity")
+		;DllCall("SendMessage", "Ptr", this.hButtonMenu3N, "UInt", 0x172, "Ptr", 0, "Ptr", CreateDIB("0173C7", 1, 1))
+		;DllCall("SendMessage", "Ptr", this.hButtonMenu3H, "UInt", 0x172, "Ptr", 0, "Ptr", CreateDIB("2A8AD4", 1, 1))
+
+		this.hButtonMenu4N := this.Canvas.Add("Picture", " x+" 2 " yp" 0 " w" 60 " h" 24 " +0x4E Hidden0")
+		this.hButtonMenu4H := this.Canvas.Add("Picture", " xp" 0 " yp" 0 " wp" 0 " hp" 0 " +0x4E Hidden1")
+		this.hButtonMenu4Text := this.Canvas.Add("Text", " xp" 0 " yp" 0 " wp" 0 " hp" 0 " +BackgroundTrans +0x201", "Advanced")
+		;DllCall("SendMessage", "Ptr", this.hButtonMenu4N, "UInt", 0x172, "Ptr", 0, "Ptr", CreateDIB("0173C7", 1, 1))
+		;DllCall("SendMessage", "Ptr", this.hButtonMenu4H, "UInt", 0x172, "Ptr", 0, "Ptr", CreateDIB("2A8AD4", 1, 1))
+
+		For Key, Value in [this.hButtonMenu1N, this.hButtonMenu2N, this.hButtonMenu3N, this.hButtonMenu4N]
+			DllCall("SendMessage", "Ptr", Value, "UInt", 0x172, "Ptr", 0, "Ptr", CreateDIB("0173C7", 1, 1))
+		For Key, Value in [this.hButtonMenu1H, this.hButtonMenu2H, this.hButtonMenu3H, this.hButtonMenu4H]
+			DllCall("SendMessage", "Ptr", Value, "UInt", 0x172, "Ptr", 0, "Ptr", CreateDIB("2A8AD4", 1, 1))
 
 		this.Canvas.Font()
 		this.BoardMsg := this.Canvas.Add("Text", "x20 y80", DownloadToStr("https://raw.githubusercontent.com/Visionary1/Tracker/master/Board.txt"))
 		this.StartBtn := this.Canvas.Add("Button", "x20 y80 w" Window.Width - 40 " h" Window.Height - 120 " Hidden", "initialize", ObjBindMethod(this, "initialize"))
+		
 		this.Canvas.Show(" w" Window.Width " h" Window.Height, Window.Title)
-
-
+		
 		WinEvents.Register(this.Canvas.hwnd, this)
 		For each, Msg in [0x200, 0x201, 0x202, 0x2A3] ; WM_MOUSEMOVE, WM_LBUTTONDOWN, WM_LBUTTONUP, WM_MOUSELEAVE
 			OnMessage(Msg, this.Bound.OnMessage)
@@ -247,7 +243,7 @@
 		If ( this.Tracker.Firing(this.AimKey) )
 		{
 			;ToolTip, % this.AimKey "`n" this.Sensitivity
-			this.Tracker.Calculate(this.Sensitivity)
+			this.Tracker.Calculate(this.Sensitivity, this.Bound.AntiShake, this.Bound.Humanizer)
 		}
 	}
 
@@ -272,6 +268,7 @@
 		}
 	}
 
+
 	WM_MOUSEMOVE(MouseCtrl) {
 		; DllCall("TrackMouseEvent", "UInt", &this.TME)
 
@@ -281,12 +278,12 @@
 		this.Canvas.Control( (MouseCtrl = this.hButtonMaximizeN || MouseCtrl = this.hButtonMaximizeH) ? "Show" : "Hide", this.hButtonMaximizeH )
 		this.Canvas.Control( (MouseCtrl = this.hButtonRestoreN || MouseCtrl = this.hButtonRestoreH) ? "Show" : "Hide", this.hButtonRestoreH )
 		this.Canvas.Control( (MouseCtrl = this.hButtonCloseN || MouseCtrl = this.hButtonCloseH) ? "Show" : "Hide", this.hButtonCloseH )
-		this.Canvas.Control( (MouseCtrl = this.hButtonMenuFileText) ? "Show" : "Hide", this.hButtonMenuFileH )
+		this.Canvas.Control( (MouseCtrl = this.hButtonMenu1Text) ? "Show" : "Hide", this.hButtonMenu1H )
 
-		this.Canvas.Control( (MouseCtrl = this.hButtonMenuEditText) ? "Show" : "Hide", this.hButtonMenuEditH )
-		this.Canvas.Control( (MouseCtrl = this.hButtonMenuViewText) ? "Show" : "Hide", this.hButtonMenuViewH )
+		this.Canvas.Control( (MouseCtrl = this.hButtonMenu2Text) ? "Show" : "Hide", this.hButtonMenu2H )
+		this.Canvas.Control( (MouseCtrl = this.hButtonMenu3Text) ? "Show" : "Hide", this.hButtonMenu3H )
 		this.Canvas.Control( (MouseCtrl = this.hButtonMenuToolsText) ? "Show" : "Hide", this.hButtonMenuToolsH )
-		this.Canvas.Control( (MouseCtrl = this.hButtonMenuHelpText) ? "Show" : "Hide", this.hButtonMenuHelpH )
+		this.Canvas.Control( (MouseCtrl = this.hButtonMenu4Text) ? "Show" : "Hide", this.hButtonMenu4H )
 	}
 
 	WM_LBUTTONDOWN(MouseCtrl) {
@@ -315,32 +312,32 @@
 			}
 		} Else If (MouseCtrl = this.hButtonCloseP) {
 			this.GuiClose()
-		} Else If (MouseCtrl = this.hButtonMenuFileText) {
-			ControlGetPos, ctlX, ctlY, ctlW, ctlH, , % "ahk_id " this.hButtonMenuFileText
+		} Else If (MouseCtrl = this.hButtonMenu1Text) {
+			ControlGetPos, ctlX, ctlY, ctlW, ctlH, , % "ahk_id " this.hButtonMenu1Text
 			Menu, OW_1, Show, %ctlX%, % ctlY + ctlH
-		} Else If (MouseCtrl = this.hButtonMenuEditText) {
-			ControlGetPos, ctlX, ctlY, ctlW, ctlH, , % "ahk_id " this.hButtonMenuEditText
+		} Else If (MouseCtrl = this.hButtonMenu2Text) {
+			ControlGetPos, ctlX, ctlY, ctlW, ctlH, , % "ahk_id " this.hButtonMenu2Text
 			Menu, OW_2, Show, %ctlX%, % ctlY + ctlH
-		} Else If (MouseCtrl = this.hButtonMenuViewText) {
-			ControlGetPos, ctlX, ctlY, ctlW, ctlH, , % "ahk_id " this.hButtonMenuViewText
+		} Else If (MouseCtrl = this.hButtonMenu3Text) {
+			ControlGetPos, ctlX, ctlY, ctlW, ctlH, , % "ahk_id " this.hButtonMenu3Text
 			Menu, OW_3, Show, %ctlX%, % ctlY + ctlH
-		; } Else If (MouseCtrl = this.hButtonMenuToolsText) {
-		; 	ControlGetPos, ctlX, ctlY, ctlW, ctlH, , % "ahk_id " this.hButtonMenuToolsText
-		; 	Menu, Dev_Menu, Show, %ctlX%, % ctlY + ctlH
-		; } Else If (MouseCtrl = this.hButtonMenuHelpText) {
-		; 	ControlGetPos, ctlX, ctlY, ctlW, ctlH, , % "ahk_id " this.hButtonMenuHelpText
-		; 	Menu, Help_Menu, Show, %ctlX%, % ctlY + ctlH
+		} Else If (MouseCtrl = this.hButtonMenu4Text) {
+			ControlGetPos, ctlX, ctlY, ctlW, ctlH, , % "ahk_id " this.hButtonMenu4Text
+			Menu, OW_4, Show, %ctlX%, % ctlY + ctlH
 		}
+		; } Else If (MouseCtrl = this.hButtonMenu4Text) {
+		; 	ControlGetPos, ctlX, ctlY, ctlW, ctlH, , % "ahk_id " this.hButtonMenu4Text
+		; 	Menu, Help_Menu, Show, %ctlX%, % ctlY + ctlH
 
 		this.Canvas.Control("Hide", this.hButtonMinimizeP)
 		this.Canvas.Control("Hide", this.hButtonMaximizeP)
 		this.Canvas.Control("Hide", this.hButtonRestoreP)
 		this.Canvas.Control("Hide", this.hButtonCloseP)
-		this.Canvas.Control("Hide", this.hButtonMenuFileH)
-		this.Canvas.Control("Hide", this.hButtonMenuEditH)
-		this.Canvas.Control("Hide", this.hButtonMenuViewH)
-		; this.Canvas.Control("Hide", this.hButtonMenuToolsH)
-		; this.Canvas.Control("Hide", this.hButtonMenuHelpH)
+		this.Canvas.Control("Hide", this.hButtonMenu1H)
+		this.Canvas.Control("Hide", this.hButtonMenu2H)
+		this.Canvas.Control("Hide", this.hButtonMenu3H)
+		this.Canvas.Control("Hide", this.hButtonMenu4H)
+		; this.Canvas.Control("Hide", this.hButtonMenu4H)
 	}
 
 	WM_MOUSELEAVE() {
@@ -352,11 +349,11 @@
 		this.Canvas.Control("Hide", this.hButtonMaximizeP)
 		this.Canvas.Control("Hide", this.hButtonRestoreP)
 		this.Canvas.Control("Hide", this.hButtonCloseP)
-		this.Canvas.Control("Hide", this.hButtonMenuFileH)
-		this.Canvas.Control("Hide", this.hButtonMenuEditH)
-		this.Canvas.Control("Hide", this.hButtonMenuViewH)
-		this.Canvas.Control("Hide", this.hButtonMenuToolsH)
-		this.Canvas.Control("Hide", this.hButtonMenuHelpH)
+		this.Canvas.Control("Hide", this.hButtonMenu1H)
+		this.Canvas.Control("Hide", this.hButtonMenu2H)
+		this.Canvas.Control("Hide", this.hButtonMenu3H)
+		this.Canvas.Control("Hide", this.hButtonMenu4H)
+		;this.Canvas.Control("Hide", this.hButtonMenuToolsH)
 	}
 
 	GuiClose() {
@@ -457,9 +454,25 @@
 			this.__Ready()
 		}
 
+		AntiShake() {
+			this.__Toggle(A_ThisMenuItem)
+			this.Parent.Bound.AntiShake := !this.Parent.Bound.AntiShake
+			Menu, % A_ThisMenu, Rename, % A_ThisMenuItem, % (this.Parent.Bound.AntiShake ? "Anti-shake on" : "Anti-shake off")
+		}
+
+		Humanizer() {
+			this.__Toggle(A_ThisMenuItem)
+			this.Parent.Bound.Humanizer := !this.Parent.Bound.Humanizer
+			Menu, % A_ThisMenu, Rename, % A_ThisMenuItem, % (this.Parent.Bound.Humanizer ? "Humanizer on" : "Humanizer off")
+		}
+
 		__Toggle(Item) {
-			try Menu, % A_ThisMenu, UnCheck, % Item
-			Menu, % A_ThisMenu, ToggleCheck, % A_ThisMenuItem
+			If (Item != A_ThisMenuItem) {
+				try Menu, % A_ThisMenu, UnCheck, % Item
+				Menu, % A_ThisMenu, ToggleCheck, % A_ThisMenuItem
+			}
+			Else
+				Menu, % A_ThisMenu, ToggleCheck, % Item
 		}
 
 		__Ready() {

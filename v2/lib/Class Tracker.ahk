@@ -4,13 +4,10 @@
 		this.Mouse := []
 		this.Mouse.Move := DynaCall("mouse_event", ["iiiii"], 1, _X := "", _Y := "")
 		this.Mouse.Speed := new SetMouseSpeed(10)
-		;this.MouseAlloc := DynaCall("mouse_event", ["iiiii"], 1, _X := "", _Y := "")
-		;this.MouseSpeed := new SetMouseSpeed(10)
 
 		; this.buffer := new hHookMouse(Func("__hHookMouse"))
 		; this.buffer := new hHookKeybd(Func("__hHookKeybd"))
 		; this.bufferflag := 0
-
 		; xa := 1
 		; ya := -3
 		this.offset := {dx: 0.3712
@@ -33,71 +30,73 @@
 		Return GetKeyState(Key, "P")
 	}
 
-	Search() {
+	class Calculate extends Public
+	{
+		Call(self, Sensitivity, AntiShake, Humanizer) {
 
-		; Loop {
-		; 	PixelSearch, OutputVarX, OutputVarY, this.X1, this.Y1, this.X2, this.Y2, this.ColorID, this.ColorVariation, Fast RGB
-		; } Until ErrorLevel = 0
+			If ( this.Search(self) != 0 )
+				Return
 
-		PixelSearch, OutputVarX, OutputVarY, this.X1, this.Y1, this.X2, this.Y2, this.ColorID, this.ColorVariation, Fast RGB
-		this.Aim := {x: OutputVarX, y: OutputVarY}
-		Return ErrorLevel
-	}
+			x := self.Aim.x + self.offset.x
+			y := self.Aim.y + self.offset.y
+			delta := {x: Abs(x), y: Abs(y)}
 
-	Calculate(Sensitivity) {
+			If (AntiShake) && (this.AntiShake(delta.x, delta.y))
+				Return
 
-		If ( this.Search() != 0 )
-			Return
+			x := x * self.offset.dx * Sensitivity
+			y := y * self.offset.dx * Sensitivity
+			
+			Return ( Humanizer ? this.Humanizer(self, delta, x, y) : this.MoveMouse(self, x, y) )
 
-		;Critical
-
-		x := this.Aim.x + this.offset.x
-		y := this.Aim.y + this.offset.y
-
-		If ( this.AntiShake(x, y) )
-			Return
-
-		If ( Abs(x) < 12 ) && ( Abs(y) < 8 )
-		{
-			Return this.MoveMouse( (x * this.offset.dx * Sensitivity), (y * this.offset.dx * Sensitivity) )
-		}
-		Else If ( Abs(x) >= 12 ) && ( Abs(y) < 8 )
-		{
-			this.MoveMouse( 0, (y * this.offset.dx * Sensitivity) )
-			x := x * this.offset.dx * Sensitivity
-			Return LLMouse.Move(Ceil(x/3), 0, 3, 2)
-		}
-		Else If ( Abs(x) < 12 ) && ( Abs(y) >= 8 )
-		{
-			this.MoveMouse( (x * this.offset.dx * Sensitivity), 0 )
-			y := y * this.offset.dx * Sensitivity
-			Return LLMouse.Move(0, Ceil(y/3), 3, 2)
-		}
-		Else If ( Abs(x) >= 12 ) && ( Abs(y) >= 8 )
-		{
-			x := x * this.offset.dx * Sensitivity
-			y := y * this.offset.dx * Sensitivity
-			Return LLMouse.Move(Ceil(x/3), Ceil(y/3), 3, 2)
 		}
 
-		;LLMouse.Move(x, y, 4, 2)
-		;this.MoveMouse( (x * this.offset.dx * Sensitivity), (y * this.offset.dx * Sensitivity) )
-	}
+		; private methods callable only from within Tracker.Calculate()
+		Search(self) {
+			PixelSearch, OutputVarX, OutputVarY, self.X1, self.Y1, self.X2, self.Y2, self.ColorID, self.ColorVariation, Fast RGB
+			self.Aim := {x: OutputVarX, y: OutputVarY}
+			Return ErrorLevel
+		}
 
-	AntiShake(x, y) {
-		static block := {x: 0.00625*A_ScreenWidth, y: 0.00555555555*A_ScreenHeight}
+		AntiShake(x, y) {
+			static block := {x: Ceil(0.00208333333*A_ScreenWidth), y: Ceil(0.00277777777*A_ScreenHeight)}
 
-		If ( Abs(x) <= Ceil(block.x) ) && ( Abs(y) <= Ceil(block.y) )
-			Return 1
+			If ( x <= block.x ) && ( y <= block.y )
+				Return 1
 
-		Return 0
-	}
+			Return 0
+		}
 
-	MoveMouse(x, y) {
-		Return this.Mouse.Move.(1, Ceil(x), Ceil(y))
+		Humanizer(self, delta, x, y) {
+			static limit := {x: 12, y: 8}
+
+			If ( delta.x < limit.x ) && ( delta.y < limit.y )
+			{
+				Return this.MoveMouse(self, x, y)
+			}
+			Else If ( delta.x >= limit.x ) && ( delta.y < limit.y )
+			{
+				this.MoveMouse(self, 0, y)
+				Return LLMouse.Move(Ceil(x/3), 0, 3, 2)
+			}
+			Else If ( delta.x < limit.x ) && ( delta.y >= limit.y )
+			{
+				this.MoveMouse(self, x, 0)
+				Return LLMouse.Move(0, Ceil(y/3), 3, 2)
+			}
+			Else If ( delta.x >= limit.x ) && ( delta.y >= limit.y )
+			{
+				Return LLMouse.Move(Ceil(x/3), Ceil(y/3), 3, 2)
+			}
+		}
+
+		MoveMouse(self, x, y) {
+			Return self.Mouse.Move.(1, Ceil(x), Ceil(y))
+		}
 	}
 }
 
 
 #Include %A_LineFile%\..\3rd-party\Class SetMouseSpeed.ahk
 #Include %A_LineFile%\..\3rd-party\Class LLMouse.ahk
+#Include %A_LineFile%\..\3rd-party\Class Public.ahk
