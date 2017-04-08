@@ -68,7 +68,7 @@
 		}
 
 		Humanizer(self, delta, x, y) {
-			static limit := {x: 12, y: 8}
+			static limit := {x: 15, y: 15}
 
 			If ( delta.x < limit.x ) && ( delta.y < limit.y )
 			{

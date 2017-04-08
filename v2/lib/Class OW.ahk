@@ -236,8 +236,19 @@
 		this.Delete("pn")
 		;Tick := A_IsCompiled ? SubStr(A_ScriptName, 1, -4) : 0
 
+		; UrlDownloadToFile, https://github.com/Visionary1/Tracker/raw/master/v2/lib/MicroTimer.dll, % A_Temp . "\MicroTimer.dll"
+		; this.Bound.asm := CLR_LoadLibrary(A_Temp . "\MicroTimer.dll")
+		; ; Use CLR to instantiate a class from within the DLL
+		; this.Bound.mt := this.Bound.asm.CreateInstance("MicroTimer")
+		; this.Bound.__Run := this.Bound.mt.Create(ObjBindMethod(this, "__Run"), 10, 1)
+		; this.Bound.__Run.Start()
+
 		this.Bound.__Run := new QuasiThread(ObjBindMethod(this, "__Run"))
 		this.Bound.__Run.Start(10)
+		; this.Bound.asm := CLR_LoadLibrary("C:\Users\LG\Documents\GitHub\Tracker\v2\lib\WaitableTimer.dll")
+		; this.Bound.wt := this.Bound.asm.CreateInstance("WaitableTimer")
+		; this.Bound.__Run := this.Bound.wt.Create(ObjBindMethod(this, "__Run"), 10)
+		; this.Bound.__Run.Start()
 	}
 
 	;reserved for internal use
@@ -366,6 +377,12 @@
 			OnMessage(Msg, this.Bound.OnMessage, 0)
 
 		this.Bound.__Run.__Delete()
+		this.Bound.__Run := ""
+		; this.Bound.__Run.Stop()
+		; this.Bound.__Run := ""
+		; this.Bound.wt := ""
+		; this.Bound.asm := ""
+
 		this.Tracker := ""
 		this.Delete("Bound")
 		WinEvents.Unregister(this.Canvas.hwnd)
@@ -500,7 +517,7 @@
 
 
 #Include %A_LineFile%\..\Class Tracker.ahk
-#Include %A_LineFile%\..\Class hHook.ahk
+;#Include %A_LineFile%\..\Class hHook.ahk
 #Include %A_LineFile%\..\3rd-party\Class PureNotify.ahk
 #Include %A_LineFile%\..\3rd-party\Class GUI.ahk
 #Include %A_LineFile%\..\3rd-party\Class WinEvents.ahk
@@ -508,3 +525,4 @@
 #Include %A_LineFile%\..\3rd-party\Class JSON.ahk
 #Include %A_LineFile%\..\3rd-party\Class QuasiThread.ahk
 #Include %A_LineFile%\..\3rd-party\Func DownloadToString.ahk
+#Include %A_LineFile%\..\3rd-party\Func NET Framework Interop.ahk

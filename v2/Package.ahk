@@ -65,4 +65,5 @@ Terminate()
 ; Class HotKey by Rune (https://github.com/Run1e)
 ; Class Public by coco
 ; Func Gdip by tic (https://autohotkey.com/boards/viewtopic.php?t=6517)
-; several codes were inspired from G33kdude, coco, and lots more...
+; Func .NET Framework Interop by Lexikos
+; several codes were inspired from Lexikos, HotKeyIt, evicC, G33kdude, coco, and lots more...
