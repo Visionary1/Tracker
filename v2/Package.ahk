@@ -1,5 +1,5 @@
 ﻿;@Ahk2Exe-SetName Tracker
-;@Ahk2Exe-SetDescription Advanced pixel tracking
+;@Ahk2Exe-SetDescription Advanced pixel tracker
 ;@Ahk2Exe-SetVersion 0.2
 ;@Ahk2Exe-SetCopyright Copyright (c) 2017`, 예지력 (https://github.com/Visionary1)
 ;@Ahk2Exe-SetOrigFileName Tracker.exe
@@ -56,7 +56,6 @@ Terminate()
 
 
 #Include, lib\Class OW.ahk
-#Include, lib\3rd-party\Class PureNotify.ahk
 
 ; Class JSON by CoCo (https://github.com/cocobelgica)
 ; Class GUI by Rune (https://github.com/Run1e)

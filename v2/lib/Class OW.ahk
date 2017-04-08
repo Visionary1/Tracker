@@ -365,8 +365,8 @@
 		For each, Msg in [0x200, 0x201, 0x202, 0x2A3]
 			OnMessage(Msg, this.Bound.OnMessage, 0)
 
-		this.Tracker := ""
 		this.Bound.__Run.__Delete()
+		this.Tracker := ""
 		this.Delete("Bound")
 		WinEvents.Unregister(this.Canvas.hwnd)
 		
@@ -457,24 +457,33 @@
 		}
 
 		AntiShake() {
-			this.__Toggle(A_ThisMenuItem)
+			Menu, % A_ThisMenu, ToggleCheck, % A_ThisMenuItem
 			this.Parent.Bound.AntiShake := !this.Parent.Bound.AntiShake
 			Menu, % A_ThisMenu, Rename, % A_ThisMenuItem, % (this.Parent.Bound.AntiShake ? "Anti-shake on" : "Anti-shake off")
 		}
 
 		Humanizer() {
-			this.__Toggle(A_ThisMenuItem)
+			Menu, % A_ThisMenu, ToggleCheck, % A_ThisMenuItem
 			this.Parent.Bound.Humanizer := !this.Parent.Bound.Humanizer
 			Menu, % A_ThisMenu, Rename, % A_ThisMenuItem, % (this.Parent.Bound.Humanizer ? "Humanizer on" : "Humanizer off")
 		}
 
 		__Toggle(Item) {
+			If (this.__Toggle_Validate(Item))
+				Return
+
 			If (Item != A_ThisMenuItem) {
 				try Menu, % A_ThisMenu, UnCheck, % Item
 				Menu, % A_ThisMenu, ToggleCheck, % A_ThisMenuItem
 			}
 			Else
 				Menu, % A_ThisMenu, ToggleCheck, % Item
+		}
+
+		__Toggle_Validate(Item) {
+			If (Item = A_ThisMenuItem)
+				Return 1
+			Return 0
 		}
 
 		__Ready() {
@@ -492,6 +501,7 @@
 
 #Include %A_LineFile%\..\Class Tracker.ahk
 #Include %A_LineFile%\..\Class hHook.ahk
+#Include %A_LineFile%\..\3rd-party\Class PureNotify.ahk
 #Include %A_LineFile%\..\3rd-party\Class GUI.ahk
 #Include %A_LineFile%\..\3rd-party\Class WinEvents.ahk
 #Include %A_LineFile%\..\3rd-party\Class HotKey.ahk
