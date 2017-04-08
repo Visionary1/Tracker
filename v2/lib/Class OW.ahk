@@ -4,7 +4,7 @@
 		
 		parsed := JSON.Load(DownloadToStr("https://raw.githubusercontent.com/Visionary1/Tracker/master/info.json"))
 
-		Window := {Width: 500, Height: 300, Title: parsed.title, StatusBarText: parsed.StatusBarText}
+		Window := {Width: 500, Height: 300, Title: parsed.title " " parsed.version, StatusBarText: parsed.StatusBarText}
 
 		this.Canvas := new GUI("Canvas", "+LastFound -Resize -Caption -Border")
 		this.Canvas.Color("FFFFFF")
@@ -55,7 +55,6 @@
 		)
 
 		this.Menus := this.CreateMenuBar(Menus)
-		;Gui, Menu, % this.Menus[1]
 		this.Canvas.Options("Menu", this.Menu[1])
 
 		this.hBorderLeft := this.Canvas.Add("Text", "x" 0 " y" 0 " w" 1 " h" Window.Height " +0x4E")
@@ -229,7 +228,10 @@
 
 		this.pn := new PureNotify(this.Tracker.X1, this.Tracker.Y1, (this.Tracker.X2 - this.Tracker.X1), (this.Tracker.Y2 - this.Tracker.Y1))
 		this.pn.Text("initializing..."
-		, "Searching area (" (this.Tracker.X2 - this.Tracker.X1) "x" (this.Tracker.Y2 - this.Tracker.Y1) ")`n`nAim  " this.AimKey "`nSus  " this.SuspendKey "`nSensitivity  " this.Sensitivity)
+		, "Searching area (" (this.Tracker.X2 - this.Tracker.X1) "x" (this.Tracker.Y2 - this.Tracker.Y1) ")`n`nAim  " 
+		. this.AimKey "`nSuspend  " this.SuspendKey "`nSensitivity  " this.Sensitivity
+		. "`nAnti-shake  " (this.bound.AntiShake ? "on" : "off")
+		. "`nHumanizer  " (this.bound.Humanizer ? "on" : "off"))
 		Sleep, 4000
 		this.Delete("pn")
 		;Tick := A_IsCompiled ? SubStr(A_ScriptName, 1, -4) : 0

@@ -1,4 +1,10 @@
-﻿#SingleInstance, Force
+﻿;@Ahk2Exe-SetName Tracker
+;@Ahk2Exe-SetDescription Advanced pixel tracking
+;@Ahk2Exe-SetVersion 0.2
+;@Ahk2Exe-SetCopyright Copyright (c) 2017`, 예지력 (https://github.com/Visionary1)
+;@Ahk2Exe-SetOrigFileName Tracker.exe
+;@Ahk2Exe-SetCompanyName Copyright (c) 2017`, 예지력 (https://github.com/Visionary1)
+#SingleInstance, Force
 #NoEnv
 #NoTrayIcon
 ;#Warn
@@ -9,7 +15,7 @@ SetWinDelay, -1
 SetControlDelay, -1
 CoordMode, Pixel, Screen
 
-Package := {Main: new OW(), version: 0.1}
+Package := {Main: new OW(), version: 0.2}
 
 If ( Package.version < Package.Main.parsed.version )
 {
