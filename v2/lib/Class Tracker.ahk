@@ -1,25 +1,6 @@
-﻿; #SingleInstance, Force
-; #NoEnv
-
-; ;#Warn
-; #KeyHistory, 0
-; ListLines, Off
-; SetBatchLines, -1
-; SetWinDelay, -1
-; SetControlDelay, -1
-; CoordMode, Pixel, Screen
-
-; test := new Tracker()
-; Return
-
-; F::
-; test.Calculate(1,2,3,4)
-; Return
-
-
-Class Tracker
+﻿Class Tracker
 {
-	__New() {
+	__New(X1 := 0, X2 := 0) {
 		this.Mouse := []
 		this.Mouse.Move := DynaCall("mouse_event", ["iiiii"], 1, _X := "", _Y := "")
 		this.Mouse.Speed := new SetMouseSpeed(10)
@@ -29,13 +10,13 @@ Class Tracker
 		; this.bufferflag := 0
 		; xa := 1
 		; ya := -3
-		this.offset := {modifier: 2.7
-			, x: Round(0.47708333334 * -A_ScreenWidth)  ;x: (41 + xa * 3) - A_ScreenWidth/2
-			, y: Round(0.43518518519 * -A_ScreenHeight)} ;(85 + ya * 5) - A_ScreenHeight/2}
+		this.offset := {modifier: 0.3712
+			, x: Round(-0.477083333346 * A_ScreenWidth)  ;x: (41 + xa * 3) - A_ScreenWidth/2
+			, y: Round(-0.43518518519 * A_ScreenHeight)} ;(85 + ya * 5) - A_ScreenHeight/2}
 
-		this.X1 := Round(A_ScreenWidth * 0.3) ;A_ScreenWidth/2 - A_ScreenWidth/5
+		this.X1 := X1 ? X1 : Round(A_ScreenWidth * 0.3) ;A_ScreenWidth/2 - A_ScreenWidth/5
 		this.Y1 := Round(A_ScreenHeight * 0.25) ;A_ScreenHeight/2 - A_ScreenHeight/4
-		this.X2 := Round(A_ScreenWidth *0.7) ;A_ScreenWidth/2 + A_ScreenWidth/5
+		this.X2 := X2 ? X2 : Round(A_ScreenWidth *0.7) ;A_ScreenWidth/2 + A_ScreenWidth/5
 		this.Y2 := Round(A_ScreenHeight * 0.75) ;A_ScreenHeight/2 + A_ScreenHeight/4
 		this.ColorID := 0xFF0013
 		this.ColorVariation := 0
@@ -63,13 +44,15 @@ Class Tracker
 			If (AntiShake)
 				this.AntiShake(delta, x, y)
 
-			x := x * (10 / Sensitivity) ;instant move
-			y := y * (10 / Sensitivity) ;instant move
+			; x := x * (10 / Sensitivity) ;instant move
+			; y := y * (10 / Sensitivity) ;instant move
+			x := Humanizer ? (x * self.offset.modifier * Sensitivity) : x * (10 / Sensitivity)
+			y := Humanizer ? (y * self.offset.modifier * Sensitivity) : y * (10 / Sensitivity)
 			; modifier := Sensitivity * 0.09
 			; x := x / modifier
 			; y := y / modifier
 
-			Return ( Humanizer ? this.Humanizer(self, delta, x, y) : this.MoveMouse(self, x / self.offset.modifier, y / self.offset.modifier) )
+			Return ( Humanizer ? this.Humanizer(self, delta, x, y) : this.MoveMouse(self, x, y) )
 		}
 
 		; private methods callable only from within Tracker.Calculate()
@@ -82,7 +65,7 @@ Class Tracker
 		}
 
 		AntiShake(delta, ByRef x, ByRef y) {
-			static block := {x: 5, y: 5}
+			static block := {x: 6, y: 6}
 
 			If ( delta.x <= block.x )
 				x := 0
@@ -91,21 +74,24 @@ Class Tracker
 		}
 
 		Humanizer(self, delta, x, y) {
-			static limit := {x: Ceil(A_ScreenWidth*0.075), y: Ceil(A_ScreenHeight*0.11111111111), times: 6}
 
-			If (delta.x <= limit.x) && (delta.y <= limit.y)
-				Return this.MoveMouse(self, x / self.offset.modifier, y / self.offset.modifier)
+			Return self.Mouse.Move.(1, Round(x), Round(y))
+			; static limit := {x: 140, y: 120, times: 6}
 
-			Loop, % limit.times
-			{
-				this.MoveMouse(self, x/limit.times, y/limit.times)
-				Sleep, 1
-			}
+			; If (delta.x <= limit.x) && (delta.y <= limit.y)
+			; 	Return this.MoveMouse(self, x * self.offset.modifier, y * self.offset.modifier)
 
+			; Loop, % limit.times
+			; {
+			; 	this.MoveMouse(self, x/limit.times, y/limit.times)
+			; 	Sleep, 1
+			; }
+
+			; Sleep, 5
 		}
 
 		MoveMouse(self, x, y) {
-			Return self.Mouse.Move.(1, Floor(x), Floor(y))
+			Return self.Mouse.Move.(1, Round(x), Round(y))
 		}
 	}
 }

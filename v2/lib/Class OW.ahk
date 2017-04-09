@@ -13,7 +13,7 @@
 		this.Bound := []
 		this.Bound.OnMessage := this.OnMessage.Bind(this)
 		this.Bound.AntiShake := 0
-		this.Bound.Humanizer := 0
+		this.Bound.Humanizer := 1 ; for it's still under dev
 
 		Buttons := new this.MenuButtons(this)
 		Menus :=
@@ -32,24 +32,27 @@
 				["F1", Buttons.SuspendKey.Bind(Buttons)],
 				["Alt", Buttons.SuspendKey.Bind(Buttons)]
 			]], ["Sensitivity", [
+				["Manually", Buttons.Custom.Bind(Buttons)],
 				["1", Buttons.Sensitivity.Bind(Buttons)],
+				["1", Buttons.Sensitivity.Bind(Buttons)],
+				["1.5", Buttons.Sensitivity.Bind(Buttons)],
 				["2", Buttons.Sensitivity.Bind(Buttons)],
+				["2.5", Buttons.Sensitivity.Bind(Buttons)],
 				["3", Buttons.Sensitivity.Bind(Buttons)],
+				["3.5", Buttons.Sensitivity.Bind(Buttons)],
 				["4", Buttons.Sensitivity.Bind(Buttons)],
+				["4.5", Buttons.Sensitivity.Bind(Buttons)],
 				["5", Buttons.Sensitivity.Bind(Buttons)],
+				["5.5", Buttons.Sensitivity.Bind(Buttons)],
 				["6", Buttons.Sensitivity.Bind(Buttons)],
+				["6.5", Buttons.Sensitivity.Bind(Buttons)],
 				["7", Buttons.Sensitivity.Bind(Buttons)],
 				["8", Buttons.Sensitivity.Bind(Buttons)],
-				["9", Buttons.Sensitivity.Bind(Buttons)],
-				["10", Buttons.Sensitivity.Bind(Buttons)],
-				["11", Buttons.Sensitivity.Bind(Buttons)],
-				["12", Buttons.Sensitivity.Bind(Buttons)],
-				["13", Buttons.Sensitivity.Bind(Buttons)],
-				["14", Buttons.Sensitivity.Bind(Buttons)],
-				["15", Buttons.Sensitivity.Bind(Buttons)]
+				["9", Buttons.Sensitivity.Bind(Buttons)]
 			]], ["Advanced", [
 				["Anti-Shake", Buttons.AntiShake.Bind(Buttons)],
-				["Humanizer", Buttons.Humanizer.Bind(Buttons)]
+				["Humanizer (개발중)", Buttons.Humanizer.Bind(Buttons)],
+				["Hook", Buttons.Rod.Bind(Buttons)]
 			]]
 		]
 		)
@@ -233,12 +236,8 @@
 		. "`nHumanizer  " (this.bound.Humanizer ? "[on]" : "[off]"))
 		Sleep, 3000
 		this.Delete("pn")
-		;this.Bound.delay := A_IsCompiled ? SubStr(A_ScriptName, 1, -4) : 0
 
-		Loop {
-			this.__Run()
-			;Sleep, 1
-		}
+		this.__Run()
 		; this.Bound.__Run := new QuasiThread(ObjBindMethod(this, "__Run"))
 		; this.Bound.__Run.Start(1)
 		;Tick := A_IsCompiled ? SubStr(A_ScriptName, 1, -4) : 0
@@ -256,16 +255,22 @@
 
 	;reserved for internal use
 	__Run() { 
-		; While, this.Tracker.Firing(this.AimKey)
-		; {
-		; 	this.Tracker.Calculate(this.Sensitivity, this.Bound.AntiShake, this.Bound.Humanizer)
-		; }
-		If ( this.Tracker.Firing(this.AimKey) )
+		
+		this.Bound.delay := A_IsCompiled ? SubStr(A_ScriptName, 1, -4) : 0
+		While, 1
 		{
-			;ToolTip, % this.AimKey "`n" this.Sensitivity
-			this.Tracker.Calculate(this.Sensitivity, this.Bound.AntiShake, this.Bound.Humanizer)
-			;Sleep, % this.Bound.delay
+			If (this.Tracker.Firing(this.AimKey)) && WinActive("오버워치")
+				this.Tracker.Calculate(this.Sensitivity, this.Bound.AntiShake, this.Bound.Humanizer)
+			
+			DllCall("Sleep", "UInt", this.Bound.delay)
 		}
+		; If ( this.Tracker.Firing(this.AimKey) ) && (WinActive("오버워치"))
+		; {
+		; 	;ToolTip, % this.AimKey "`n" this.Sensitivity
+		; 	this.Tracker.Calculate(this.Sensitivity, this.Bound.AntiShake, this.Bound.Humanizer)
+		; 	DllCall("Sleep", "UInt", 10)
+		; 	;Sleep, % this.Bound.delay
+		; }
 	}
 
 	;reserved for internal use
@@ -481,6 +486,26 @@
 			this.__Ready()
 		}
 
+		Custom() {
+			Gui, % this.Parent.Canvas.hwnd ": +OwnDialogs"
+			InputBox, OutputVar, Sensitivity, input number for Sensitivity,, 300, 150,,,,, type number (0.00~100.00)
+			If (ErrorLevel = 0)
+			{
+				; to prevent duplicate items (eg, 1, 2, 3 ...)
+				If OutputVar Is Float
+					OutputVar := OutputVar . "0"
+				Else If OutputVar Is Integer
+					OutputVar := OutputVar . ".0"
+				Else
+					Return
+
+				this.__Toggle(this.Parent.Sensitivity)
+				this.Parent.Sensitivity := OutputVar
+				try Menu, % A_ThisMenu, Rename, % A_ThisMenuItem, % this.Parent.Sensitivity
+				this.__Ready()
+			}
+		}
+
 		AntiShake() {
 			Menu, % A_ThisMenu, ToggleCheck, % A_ThisMenuItem
 			this.Parent.Bound.AntiShake := !this.Parent.Bound.AntiShake
@@ -488,9 +513,28 @@
 		}
 
 		Humanizer() {
-			Menu, % A_ThisMenu, ToggleCheck, % A_ThisMenuItem
-			this.Parent.Bound.Humanizer := !this.Parent.Bound.Humanizer
-			Menu, % A_ThisMenu, Rename, % A_ThisMenuItem, % (this.Parent.Bound.Humanizer ? "Humanizer on" : "Humanizer off")
+			; Menu, % A_ThisMenu, ToggleCheck, % A_ThisMenuItem
+			; this.Parent.Bound.Humanizer := !this.Parent.Bound.Humanizer
+			; Menu, % A_ThisMenu, Rename, % A_ThisMenuItem, % (this.Parent.Bound.Humanizer ? "Humanizer on" : "Humanizer off")
+		}
+
+		Rod() {
+			global InGameSens
+
+			If (this.keybdHook)
+				this.keybdHook := ""
+
+			Gui, % this.Parent.Canvas.hwnd ": +OwnDialogs"
+			InputBox, OutputVar, Hook, input your 'in-game' sensitivity,, 300, 150,,,,, only 'in-game' sensitivity (0.00~100.00)
+			If (ErrorLevel = 0)
+			{
+				If OutputVar Is Not Number
+					Return
+
+				InGameSens := OutputVar
+				this.keybdHook := new hHookKeybd(Func("Chase"))
+				MsgBox, :)
+			}
 		}
 
 		__Toggle(Item) {
@@ -523,9 +567,28 @@
 	}
 }
 
+Chase(nCode, wParam, lParam)
+{
+	static abc := new Tracker(0, A_ScreenWidth)
+	global InGameSens
+
+	Critical
+	SetFormat, IntegerFast, H
+
+	If (wParam = 0x100) 
+	{
+		If (GetKeyName("vk" NumGet(lParam+0, 0)) = "LShift")
+		{
+			abc.Calculate(InGameSens, 0, 0)
+		}
+	}
+
+	Return hHook.CallNextHookEx(nCode, wParam, lParam)
+}
+
 
 #Include %A_LineFile%\..\Class Tracker.ahk
-;#Include %A_LineFile%\..\Class hHook.ahk
+#Include %A_LineFile%\..\3rd-party\Class hHook.ahk
 #Include %A_LineFile%\..\3rd-party\Class PureNotify.ahk
 #Include %A_LineFile%\..\3rd-party\Class GUI.ahk
 #Include %A_LineFile%\..\3rd-party\Class WinEvents.ahk
