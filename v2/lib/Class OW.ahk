@@ -50,9 +50,9 @@
 				["8", Buttons.Sensitivity.Bind(Buttons)],
 				["9", Buttons.Sensitivity.Bind(Buttons)]
 			]], ["Advanced", [
-				["Anti-Shake", Buttons.AntiShake.Bind(Buttons)],
+				["Anti-Shake [OFF]", Buttons.AntiShake.Bind(Buttons)],
 				["Humanizer (개발중)", Buttons.Humanizer.Bind(Buttons)],
-				["Hook", Buttons.Rod.Bind(Buttons)]
+				["Roadhog Hook lock [OFF]", Buttons.Rod.Bind(Buttons)]
 			]]
 		]
 		)
@@ -255,7 +255,7 @@
 
 	;reserved for internal use
 	__Run() { 
-		
+
 		this.Bound.delay := A_IsCompiled ? SubStr(A_ScriptName, 1, -4) : 0
 		While, 1
 		{
@@ -487,7 +487,7 @@
 		}
 
 		Custom() {
-			Gui, % this.Parent.Canvas.hwnd ": +OwnDialogs"
+			Gui, % WinExist("A") ": +OwnDialogs"
 			InputBox, OutputVar, Sensitivity, input number for Sensitivity,, 300, 150,,,,, type number (0.00~100.00)
 			If (ErrorLevel = 0)
 			{
@@ -509,7 +509,7 @@
 		AntiShake() {
 			Menu, % A_ThisMenu, ToggleCheck, % A_ThisMenuItem
 			this.Parent.Bound.AntiShake := !this.Parent.Bound.AntiShake
-			Menu, % A_ThisMenu, Rename, % A_ThisMenuItem, % (this.Parent.Bound.AntiShake ? "Anti-shake on" : "Anti-shake off")
+			Menu, % A_ThisMenu, Rename, % A_ThisMenuItem, % (this.Parent.Bound.AntiShake ? "Anti-shake [ON]" : "Anti-shake [OFF]")
 		}
 
 		Humanizer() {
@@ -519,12 +519,18 @@
 		}
 
 		Rod() {
+			static toggleFlag := 0
 			global InGameSens
 
-			If (this.keybdHook)
+			If (toggleFlag)
+			{
 				this.keybdHook := ""
+				Menu, % A_ThisMenu, UnCheck, % "Roadhog Hook lock [ON]"
+				Menu, % A_ThisMenu, Rename, % A_ThisMenuItem, % "Roadhog Hook lock [OFF]"
+				Return toggleFlag := 0
+			}
 
-			Gui, % this.Parent.Canvas.hwnd ": +OwnDialogs"
+			Gui, % WinExist("A") ": +OwnDialogs"
 			InputBox, OutputVar, Hook, input your 'in-game' sensitivity,, 300, 150,,,,, only 'in-game' sensitivity (0.00~100.00)
 			If (ErrorLevel = 0)
 			{
@@ -533,7 +539,12 @@
 
 				InGameSens := OutputVar
 				this.keybdHook := new hHookKeybd(Func("Chase"))
-				MsgBox, :)
+				Instruction := "Hook lock has been set up"
+				Content := "'Shift' will trigger the hook lock"
+				TaskDialog(Instruction, Content, "Roadhog Hook lock", 0x1, 0xFFFD, "", WinExist("A"))
+				toggleFlag := 1
+				Menu, % A_ThisMenu, Rename, % A_ThisMenuItem, % "Roadhog Hook lock [ON]"
+				Menu, % A_ThisMenu, Check, % "Roadhog Hook lock [ON]"
 			}
 		}
 
@@ -565,6 +576,36 @@
 			}
 		}
 	}
+}
+
+
+TaskDialog(Instruction, Content := "", Title := "", Buttons := 1, IconID := 0, IconRes := "", Owner := 0x10010) {
+    Local hModule, LoadLib, Ret
+
+    If (IconRes != "") {
+        hModule := DllCall("GetModuleHandle", "Str", IconRes, "Ptr")
+        LoadLib := !hModule
+            && hModule := DllCall("LoadLibraryEx", "Str", IconRes, "UInt", 0, "UInt", 0x2)
+    } Else {
+        hModule := 0
+        LoadLib := False
+    }
+
+    DllCall("TaskDialog"
+        , "UInt", Owner        ; hWndParent
+        , "UInt", hModule      ; hInstance
+        , "UInt", &Title       ; pszWindowTitle
+        , "UInt", &Instruction ; pszMainInstruction
+        , "UInt", &Content     ; pszContent
+        , "UInt", Buttons      ; dwCommonButtons
+        , "UInt", IconID       ; pszIcon
+        , "Int*", Ret := 0)    ; *pnButton
+
+    If (LoadLib) {
+        DllCall("FreeLibrary", "UInt", hModule)
+    }
+
+    Return {1: "OK", 2: "Cancel", 4: "Retry", 6: "Yes", 7: "No", 8: "Close"}[Ret]
 }
 
 Chase(nCode, wParam, lParam)
