@@ -6,7 +6,7 @@
 
 		Window := {Width: 500, Height: 300, Title: parsed.title " " parsed.version, StatusBarText: parsed.StatusBarText}
 
-		this.Canvas := new GUI("Canvas", "+LastFound -Resize -Caption -Border")
+		this.Canvas := new GUI(Window.Title, "+LastFound -Resize -Caption -Border")
 		this.Canvas.Color("FFFFFF")
 		this.Canvas.Margin(10, 10)
 
@@ -32,21 +32,21 @@
 				["F1", Buttons.SuspendKey.Bind(Buttons)],
 				["Alt", Buttons.SuspendKey.Bind(Buttons)]
 			]], ["Sensitivity", [
-				["0.5", Buttons.Sensitivity.Bind(Buttons)],
 				["1", Buttons.Sensitivity.Bind(Buttons)],
-				["1.5", Buttons.Sensitivity.Bind(Buttons)],
 				["2", Buttons.Sensitivity.Bind(Buttons)],
-				["2.5", Buttons.Sensitivity.Bind(Buttons)],
 				["3", Buttons.Sensitivity.Bind(Buttons)],
-				["3.5", Buttons.Sensitivity.Bind(Buttons)],
 				["4", Buttons.Sensitivity.Bind(Buttons)],
-				["4.5", Buttons.Sensitivity.Bind(Buttons)],
 				["5", Buttons.Sensitivity.Bind(Buttons)],
-				["5.5", Buttons.Sensitivity.Bind(Buttons)],
 				["6", Buttons.Sensitivity.Bind(Buttons)],
 				["7", Buttons.Sensitivity.Bind(Buttons)],
 				["8", Buttons.Sensitivity.Bind(Buttons)],
-				["9", Buttons.Sensitivity.Bind(Buttons)]
+				["9", Buttons.Sensitivity.Bind(Buttons)],
+				["10", Buttons.Sensitivity.Bind(Buttons)],
+				["11", Buttons.Sensitivity.Bind(Buttons)],
+				["12", Buttons.Sensitivity.Bind(Buttons)],
+				["13", Buttons.Sensitivity.Bind(Buttons)],
+				["14", Buttons.Sensitivity.Bind(Buttons)],
+				["15", Buttons.Sensitivity.Bind(Buttons)]
 			]], ["Advanced", [
 				["Anti-Shake", Buttons.AntiShake.Bind(Buttons)],
 				["Humanizer", Buttons.Humanizer.Bind(Buttons)]
@@ -206,9 +206,8 @@
 		this.Canvas.Font()
 		this.BoardMsg := this.Canvas.Add("Text", "x20 y80", DownloadToStr("https://raw.githubusercontent.com/Visionary1/Tracker/master/Board.txt"))
 		this.StartBtn := this.Canvas.Add("Button", "x20 y80 w" Window.Width - 40 " h" Window.Height - 120 " Hidden", "initialize", ObjBindMethod(this, "initialize"))
-		
-		this.Canvas.Show(" w" Window.Width " h" Window.Height, Window.Title)
-		
+		this.Canvas.Show(" w" Window.Width " h" Window.Height)
+
 		WinEvents.Register(this.Canvas.hwnd, this)
 		For each, Msg in [0x200, 0x201, 0x202, 0x2A3] ; WM_MOUSEMOVE, WM_LBUTTONDOWN, WM_LBUTTONUP, WM_MOUSELEAVE
 			OnMessage(Msg, this.Bound.OnMessage)
@@ -228,23 +227,27 @@
 
 		this.pn := new PureNotify(this.Tracker.X1, this.Tracker.Y1, (this.Tracker.X2 - this.Tracker.X1), (this.Tracker.Y2 - this.Tracker.Y1))
 		this.pn.Text("initializing..."
-		, "Searching area (" (this.Tracker.X2 - this.Tracker.X1) "x" (this.Tracker.Y2 - this.Tracker.Y1) ")`n`nAim  " 
-		. this.AimKey "`nSuspend  " this.SuspendKey "`nSensitivity  " this.Sensitivity
-		. "`nAnti-shake  " (this.bound.AntiShake ? "on" : "off")
-		. "`nHumanizer  " (this.bound.Humanizer ? "on" : "off"))
-		Sleep, 4000
+		, "Searching area (" (this.Tracker.X2 - this.Tracker.X1) "x" (this.Tracker.Y2 - this.Tracker.Y1) ")`n`nAim  [" 
+		. this.AimKey "]`nSuspend  [" this.SuspendKey "]`nSensitivity  [" this.Sensitivity
+		. "]`nAnti-shake  " (this.bound.AntiShake ? "[on]" : "[off]")
+		. "`nHumanizer  " (this.bound.Humanizer ? "[on]" : "[off]"))
+		Sleep, 3000
 		this.Delete("pn")
-		;Tick := A_IsCompiled ? SubStr(A_ScriptName, 1, -4) : 0
+		;this.Bound.delay := A_IsCompiled ? SubStr(A_ScriptName, 1, -4) : 0
 
+		Loop {
+			this.__Run()
+			;Sleep, 1
+		}
+		; this.Bound.__Run := new QuasiThread(ObjBindMethod(this, "__Run"))
+		; this.Bound.__Run.Start(1)
+		;Tick := A_IsCompiled ? SubStr(A_ScriptName, 1, -4) : 0
 		; UrlDownloadToFile, https://github.com/Visionary1/Tracker/raw/master/v2/lib/MicroTimer.dll, % A_Temp . "\MicroTimer.dll"
-		; this.Bound.asm := CLR_LoadLibrary(A_Temp . "\MicroTimer.dll")
+		; this.Bound.asm := CLR_LoadLibrary("C:\Users\LG\Documents\GitHub\Tracker\v2\lib\MicroTimer.dll")
 		; ; Use CLR to instantiate a class from within the DLL
 		; this.Bound.mt := this.Bound.asm.CreateInstance("MicroTimer")
-		; this.Bound.__Run := this.Bound.mt.Create(ObjBindMethod(this, "__Run"), 10, 1)
+		; this.Bound.__Run := this.Bound.mt.Create(ObjBindMethod(this, "__Run"), 40)
 		; this.Bound.__Run.Start()
-
-		this.Bound.__Run := new QuasiThread(ObjBindMethod(this, "__Run"))
-		this.Bound.__Run.Start(10)
 		; this.Bound.asm := CLR_LoadLibrary("C:\Users\LG\Documents\GitHub\Tracker\v2\lib\WaitableTimer.dll")
 		; this.Bound.wt := this.Bound.asm.CreateInstance("WaitableTimer")
 		; this.Bound.__Run := this.Bound.wt.Create(ObjBindMethod(this, "__Run"), 10)
@@ -253,10 +256,15 @@
 
 	;reserved for internal use
 	__Run() { 
+		; While, this.Tracker.Firing(this.AimKey)
+		; {
+		; 	this.Tracker.Calculate(this.Sensitivity, this.Bound.AntiShake, this.Bound.Humanizer)
+		; }
 		If ( this.Tracker.Firing(this.AimKey) )
 		{
 			;ToolTip, % this.AimKey "`n" this.Sensitivity
 			this.Tracker.Calculate(this.Sensitivity, this.Bound.AntiShake, this.Bound.Humanizer)
+			;Sleep, % this.Bound.delay
 		}
 	}
 
@@ -376,11 +384,11 @@
 		For each, Msg in [0x200, 0x201, 0x202, 0x2A3]
 			OnMessage(Msg, this.Bound.OnMessage, 0)
 
-		this.Bound.__Run.__Delete()
-		this.Bound.__Run := ""
+		; this.Bound.__Run.__Delete()
+		; this.Bound.__Run := ""
 		; this.Bound.__Run.Stop()
 		; this.Bound.__Run := ""
-		; this.Bound.wt := ""
+		; this.Bound.mt := ""
 		; this.Bound.asm := ""
 
 		this.Tracker := ""
@@ -394,7 +402,7 @@
 		For each, MenuName in this.Menus
 			Menu, %MenuName%, DeleteAll
 
-		this.Canvas := ""
+		this.Canvas.__Delete()
 		this.CloseCallback()
 	}
 
@@ -523,6 +531,7 @@
 #Include %A_LineFile%\..\3rd-party\Class WinEvents.ahk
 #Include %A_LineFile%\..\3rd-party\Class HotKey.ahk
 #Include %A_LineFile%\..\3rd-party\Class JSON.ahk
-#Include %A_LineFile%\..\3rd-party\Class QuasiThread.ahk
+;#Include %A_LineFile%\..\3rd-party\Class QuasiThread.ahk
 #Include %A_LineFile%\..\3rd-party\Func DownloadToString.ahk
-#Include %A_LineFile%\..\3rd-party\Func NET Framework Interop.ahk
+;#Include %A_LineFile%\..\3rd-party\Func NET Framework Interop.ahk
+;#Include %A_LineFile%\..\3rd-party\Func AddToolTip.ahk

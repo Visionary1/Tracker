@@ -15,7 +15,7 @@
 	}
 	
 	__Delete() {
-		this.Destroy()
+		try this.Destroy()
 		Gui.Instances[hwnd] := ""
 	}
 	

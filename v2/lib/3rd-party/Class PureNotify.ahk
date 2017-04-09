@@ -20,12 +20,11 @@
 
 		this.FadeFlag := True ; for future use of fade-in/fade-out animation
 
-		Gui, New, HwndPN_hwnd
-		Gui, %PN_hwnd%:Default 
-		Gui, -Caption +E0x80000 +LastFound +AlwaysOnTop +ToolWindow +OwnDialogs +E0x20
+		Gui, New, +hwndhwnd -Caption +E0x80000 +AlwaysOnTop +ToolWindow +OwnDialogs +E0x20
 		Gui, Show, NA
 
-		this.hwnd := WinExist() ; Get a handle to this window we have created in order to update it later
+		this.hwnd := hwnd
+		;this.hwnd := WinExist() ; Get a handle to this window we have created in order to update it later
 
 		this.hbm := CreateDIBSection(Width, Height) ; Create a gdi bitmap with width and height of what we are going to draw into it. This is the entire drawing area for everything
 		this.hdc := CreateCompatibleDC() ; Get a device context compatible with the screen
