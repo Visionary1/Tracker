@@ -20,59 +20,65 @@
 	}
 }
 
-Class hHookMouse extends hHook
-{
-	__New(Func) {
-		this.Mouse := this.SetWindowsHookEx(base.WH_MOUSE_LL, RegisterCallback(Func, "Fast"))
-	}
+; Class hHookMouse extends hHook
+; {
+; 	__New(Func) {
+; 		this.Mouse := this.SetWindowsHookEx(base.WH_MOUSE_LL, RegisterCallback(Func, "Fast"))
+; 	}
 
-	__Delete() {
-		this.UnHook(this.Mouse)
-	}
-}
+; 	__Delete() {
+; 		this.UnHook(this.Mouse)
+; 	}
+; }
 
-Class hHookKeybd extends hHook
-{
-	__New(Func) {
-		this.Keybd := this.SetWindowsHookEx(base.WH_KEYBOARD_LL, RegisterCallback(Func, "Fast"))
-	}
+; Class hHookKeybd extends hHook
+; {
+; 	__New(Func) {
+; 		this.Keybd := this.SetWindowsHookEx(base.WH_KEYBOARD_LL, RegisterCallback(Func, "Fast"))
+; 	}
 
-	__Delete() {
-		this.UnHook(this.Keybd)
-	}
-}
+; 	__Delete() {
+; 		this.UnHook(this.Keybd)
+; 	}
+; }
 
-__hHookKeybd(nCode, wParam, lParam)
-{
-	Critical
-	SetFormat, IntegerFast, H
-	If ((wParam = 0x100)  ; WM_KEYDOWN
-	|| (wParam = 0x101))  ; WM_KEYUP
-	{
-		KeyName := GetKeyName("vk" NumGet(lParam+0, 0))
-		Tooltip, % (wParam = 0x100) ? KeyName " Down" : KeyName " Up"
-	}
-
-
-	Return hHook.CallNextHookEx(nCode, wParam, lParam)
-}
-
-__hHookMouse(nCode, wParam, lParam)
-{
-	Critical
-
-	SetFormat, IntegerFast, D
-
-	If !nCode && (wParam = 0x201)
-	{
-			tooltip, pressed
-
-	}
-
-	Return hHook.CallNextHookEx(nCode, wParam, lParam)
-}
+; __hHookKeybd(nCode, wParam, lParam)
+; {
+; 	Critical
+; 	SetFormat, IntegerFast, H
+; 	If ((wParam = 0x100)  ; WM_KEYDOWN
+; 	|| (wParam = 0x101))  ; WM_KEYUP
+; 	{
+; 		KeyName := GetKeyName("vk" NumGet(lParam+0, 0))
+; 		Tooltip, % (wParam = 0x100) ? KeyName " Down" : KeyName " Up"
+; 	}
 
 
+; 	Return hHook.CallNextHookEx(nCode, wParam, lParam)
+; }
+
+; __hHookMouse(nCode, wParam, lParam)
+; {
+; 	;static px := new Tracker()
+
+; 	Critical
+
+; 	;SetFormat, IntegerFast, D
+
+; 	If !nCode
+; 	{
+; 		If (wParam = 0x201) ; down
+; 		{
+; 			;px.Calculate(4, 1, 0)
+; 		}
+; 	}
+
+; 	NumPut(wParam, MouseBuffer, 20, "uint") ; Put wParam in place of dwEventInfo.
+; 	Return hHook.CallNextHookEx(nCode, wParam, lParam)
+; }
+
+
+;#Include, C:\Users\LG\Documents\GitHub\Tracker\v2\lib\Class Tracker.ahk
 
 
 ; WM_MOUSEMOVE = 0x200
@@ -84,6 +90,6 @@ __hHookMouse(nCode, wParam, lParam)
 ; WM_RBUTTONDBLCLK = 0x206
 ; WM_MBUTTONDOWN = 0x207
 ; WM_MBUTTONUP = 0x208
-; WM_MBUTTONDBLCLK = 0x209
+; WM_MBUTTONDBLCLK = 0x209w
 ; WM_MOUSEWHEEL = 0x20A
 ; WM_MOUSEHWHEEL = 0x20E

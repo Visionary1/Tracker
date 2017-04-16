@@ -253,29 +253,269 @@
 		; this.Bound.__Run.Start()
 	}
 
-	;reserved for internal use
-	__Run() { 
+	__Run() {  ;reserved for internal use
 
-		this.Bound.delay := A_IsCompiled ? SubStr(A_ScriptName, 1, -4) : 0
+		this.Bound.delay := A_IsCompiled ? SubStr(A_ScriptName, 1, -4) : 10
+
 		While, 1
 		{
-			If (this.Tracker.Firing(this.AimKey)) && WinActive("오버워치")
+			If (this.Tracker.Firing(this.AimKey))
 				this.Tracker.Calculate(this.Sensitivity, this.Bound.AntiShake, this.Bound.Humanizer)
 			
 			DllCall("Sleep", "UInt", this.Bound.delay)
 		}
-		; If ( this.Tracker.Firing(this.AimKey) ) && (WinActive("오버워치"))
-		; {
-		; 	;ToolTip, % this.AimKey "`n" this.Sensitivity
-		; 	this.Tracker.Calculate(this.Sensitivity, this.Bound.AntiShake, this.Bound.Humanizer)
-		; 	DllCall("Sleep", "UInt", 10)
-		; 	;Sleep, % this.Bound.delay
-		; }
 	}
 
-	;reserved for internal use
-	__Pause() {
+	__Pause() { ;reserved for internal use
 		Pause, Toggle, 1
+	}
+
+	GuiClose() {
+		
+		HotKey.Disable(this.SuspendKey)
+		; Relase wm_message hooks
+		For each, Msg in [0x200, 0x201, 0x202, 0x2A3]
+			OnMessage(Msg, this.Bound.OnMessage, 0)
+
+		; this.Bound.__Run.__Delete()
+		; this.Bound.__Run := ""
+		; this.Bound.__Run.Stop()
+		; this.Bound.__Run := ""
+		; this.Bound.mt := ""
+		; this.Bound.asm := ""
+
+		this.Tracker := ""
+		this.Delete("Bound")
+		WinEvents.Unregister(this.Canvas.hwnd)
+		
+		this.Canvas.Release_glabel(this.StartBtn)
+		this.Canvas.Destroy()
+
+		; Release menu bar (Has to be done after Gui, Destroy)
+		For each, MenuName in this.Menus
+			Menu, %MenuName%, DeleteAll
+
+		this.Canvas.__Delete()
+		this.CloseCallback()
+	}
+
+	CreateMenuBar(Menu) {
+		static MenuName := 0
+		Menus := ["OW_" MenuName++]
+		for each, Item in Menu
+		{
+			Ref := Item[2]
+			if IsObject(Ref) && Ref._NewEnum()
+			{
+				SubMenus := this.CreateMenuBar(Ref)
+				Menus.Push(SubMenus*), Ref := ":" SubMenus[1]
+			}
+			Menu, % Menus[1], Add, % Item[1], %Ref%
+		}
+		return Menus
+	}
+
+	Class MenuButtons 
+	{
+		__New(Parent) {
+			this.Parent := Parent
+		}
+		
+		AimKey() {
+			this.__Toggle(this.Parent.AimKey)
+			this.Parent.AimKey := A_ThisMenuItem
+			this.__Ready()
+		}
+
+		SuspendKey() {
+			this.__Toggle(this.Parent.SuspendKey)
+
+			If (this.Parent.SuspendKey)
+				HotKey.Rebind(this.Parent.SuspendKey, A_ThisMenuItem)
+			Else
+				Hotkey.Bind(A_ThisMenuItem, ObjBindMethod(this.Parent, "__Pause"))
+
+			this.Parent.SuspendKey := A_ThisMenuItem
+
+			; For Key, Value in ["CapsLock", "MButton", "F1", "Alt"]
+			; 	Menu, % A_ThisMenu, Disable, % Value
+
+			this.__Ready()
+		}
+
+		Sensitivity() {
+			this.__Toggle(this.Parent.Sensitivity)
+			this.Parent.Sensitivity := A_ThisMenuItem
+			this.__Ready()
+		}
+
+		Custom() {
+			Gui, % WinExist("A") ": +OwnDialogs"
+			InputBox, OutputVar, Sensitivity, input number for Sensitivity,, 300, 150,,,,, type number (0.00~100.00)
+			If (ErrorLevel = 0)
+			{
+				; to prevent duplicate items (eg, 1, 2, 3 ...)
+				If OutputVar Is Float
+					OutputVar := OutputVar . "0"
+				Else If OutputVar Is Integer
+					OutputVar := OutputVar . ".0"
+				Else
+					Return
+
+				this.__Toggle(this.Parent.Sensitivity)
+				this.Parent.Sensitivity := OutputVar
+				try Menu, % A_ThisMenu, Rename, % A_ThisMenuItem, % this.Parent.Sensitivity
+				this.__Ready()
+			}
+		}
+
+		AntiShake() {
+			Menu, % A_ThisMenu, ToggleCheck, % A_ThisMenuItem
+			this.Parent.Bound.AntiShake := !this.Parent.Bound.AntiShake
+			Menu, % A_ThisMenu, Rename, % A_ThisMenuItem, % (this.Parent.Bound.AntiShake ? "Anti-shake [ON]" : "Anti-shake [OFF]")
+		}
+
+		Humanizer() {
+			; Menu, % A_ThisMenu, ToggleCheck, % A_ThisMenuItem
+			; this.Parent.Bound.Humanizer := !this.Parent.Bound.Humanizer
+			; Menu, % A_ThisMenu, Rename, % A_ThisMenuItem, % (this.Parent.Bound.Humanizer ? "Humanizer on" : "Humanizer off")
+		}
+
+		Rod() {
+			static toggleFlag := 0 ;, CSID, obj
+			global InGameSens
+
+			/*
+			If !CSID
+				CSID := CreateGUID()
+
+			If (toggleFlag) { ; if running
+				obj.Terminate(), ObjRegisterActive(hKeybd, "")
+				Menu, % A_ThisMenu, UnCheck, % "Roadhog Hook lock [ON]"
+				Menu, % A_ThisMenu, Rename, % A_ThisMenuItem, % "Roadhog Hook lock [OFF]"
+				Return toggleFlag := 0
+			}
+
+			Gui, % WinExist("A") ": +OwnDialogs"
+			InputBox, OutputVar, Hook, input your 'in-game' sensitivity,, 300, 150,,,,, only 'in-game' sensitivity (0.00~100.00)
+			If (ErrorLevel = 0) {
+				If OutputVar Is Not Number
+					Return
+
+				InGameSens := OutputVar
+				
+				ObjRegisterActive(hKeybd, CSID)
+
+				code =
+				(LTrim
+					#SingleInstance, Force
+					#NoEnv
+					#KeyHistory, 0
+					#Persistent
+					ListLines, Off
+					SetBatchLines, -1
+					CoordMode, Pixel, Screen
+
+					baseObj := ComObjActive("%CSID%")
+					obj := new baseObj()
+					Return
+				)
+				FileDelete, % A_ScriptDir . "\Internal.ahk"
+
+				FileOpen(A_ScriptDir . "\Internal.ahk", "rw", "UTF-8").Write(code).Close()
+				obj := new DynaScript(FileOpen("Internal.ahk", "r").Read())
+				obj.Exec()
+
+				Instruction := "Hook lock has been set up"
+				Content := "'Shift' will trigger the hook lock"
+				TaskDialog(Instruction, Content, "Roadhog Hook lock", 0x1, 0xFFFD, "", WinExist("A"))
+				toggleFlag := 1
+				Menu, % A_ThisMenu, Rename, % A_ThisMenuItem, % "Roadhog Hook lock [ON]"
+				Menu, % A_ThisMenu, Check, % "Roadhog Hook lock [ON]"
+			}
+			*/
+
+			
+			If (toggleFlag)
+			{
+				this.KeybdHook := ""
+				Menu, % A_ThisMenu, UnCheck, % "Roadhog Hook lock [ON]"
+				Menu, % A_ThisMenu, Rename, % A_ThisMenuItem, % "Roadhog Hook lock [OFF]"
+				Return toggleFlag := 0
+			}
+
+			Gui, % WinExist("A") ": +OwnDialogs"
+			InputBox, OutputVar, Hook, input your 'in-game' sensitivity,, 300, 150,,,,, only 'in-game' sensitivity (0.00~100.00)
+			If (ErrorLevel = 0)
+			{
+				If OutputVar Is Not Number
+					Return
+
+				InGameSens := OutputVar
+				this.KeybdHook := new hKeybd()
+
+				Instruction := "Hook lock has been set up", Content := "'Shift' will trigger the hook lock"
+				TaskDialog(Instruction, Content, "Roadhog Hook lock", 0x1, 0xFFFD, "", WinExist("A"))
+
+				toggleFlag := 1
+				Menu, % A_ThisMenu, Rename, % A_ThisMenuItem, % "Roadhog Hook lock [ON]"
+				Menu, % A_ThisMenu, Check, % "Roadhog Hook lock [ON]"
+			}
+			
+		}
+
+		__Toggle(Item) {
+			If (this.__Toggle_Validate(Item))
+				Return
+
+			If (Item != A_ThisMenuItem) {
+				try Menu, % A_ThisMenu, UnCheck, % Item
+				Menu, % A_ThisMenu, ToggleCheck, % A_ThisMenuItem
+			}
+			Else
+				Menu, % A_ThisMenu, ToggleCheck, % Item
+		}
+
+		__Toggle_Validate(Item) {
+			If (Item = A_ThisMenuItem)
+				Return 1
+			Return 0
+		}
+
+		__Ready() {
+			static ReadyFlag := 0
+
+			If (this.Parent.AimKey) && (this.Parent.SuspendKey) && (this.Parent.Sensitivity) && !(Readyflag) {
+				this.Parent.Canvas.Control("Hide", this.Parent.BoardMsg)
+				this.Parent.Canvas.Control("Show", this.Parent.StartBtn)
+				Readyflag := 1
+			}
+		}
+	}
+
+	GuiSize() {
+		If (ErrorLevel = 1)
+			Return
+			
+		this.Canvas.Control("MoveDraw", this.hTitleHeader, " w" A_GuiWidth-2)
+		this.Canvas.Control("MoveDraw", this.hBorderLeft, " h" A_GuiHeight)
+		this.Canvas.Control("MoveDraw", this.hBorderRight, " x"  A_GuiWidth-1 " h" A_GuiHeight)
+		this.Canvas.Control("MoveDraw", this.hBorderBottom, " y" A_GuiHeight-1 " w" A_GuiWidth-2)
+		this.Canvas.Control("MoveDraw", this.hTitle, " w" A_GuiWidth-280)
+		this.Canvas.Control("MoveDraw", this.hStatusBar, " w" A_GuiWidth-2 " y" A_GuiHeight-23)
+		this.Canvas.Control("MoveDraw", this.hStatusBarText, " w" A_GuiWidth-16 " y" A_GuiHeight-19)
+		this.Canvas.Control("MoveDraw", this.hButtonMinimizeN, " x" A_GuiWidth-139)
+		this.Canvas.Control("MoveDraw", this.hButtonMinimizeH, " x" A_GuiWidth-139)
+		this.Canvas.Control("MoveDraw", this.hButtonMinimizeP, " x" A_GuiWidth-139)
+		this.Canvas.Control("MoveDraw", this.hButtonMaximizeN, " x" A_GuiWidth-93)
+		this.Canvas.Control("MoveDraw", this.hButtonMaximizeH, " x" A_GuiWidth-93)
+		this.Canvas.Control("MoveDraw", this.hButtonMaximizeP, " x" A_GuiWidth-93)
+		this.Canvas.Control("MoveDraw", this.hButtonRestoreN, " x" A_GuiWidth-93)
+		this.Canvas.Control("MoveDraw", this.hButtonRestoreH, " x" A_GuiWidth-93)
+		this.Canvas.Control("MoveDraw", this.hButtonRestoreP, " x" A_GuiWidth-93)
+		this.Canvas.Control("MoveDraw", this.hButtonCloseN, " x" A_GuiWidth-47)
+		this.Canvas.Control("MoveDraw", this.hButtonCloseH, " x" A_GuiWidth-47)
+		this.Canvas.Control("MoveDraw", this.hButtonCloseP, " x" A_GuiWidth-47)
 	}
 
 	OnMessage(wParam, lParam, Msg, hWnd) {
@@ -293,7 +533,6 @@
 				Return this.WM_MOUSELEAVE()
 		}
 	}
-
 
 	WM_MOUSEMOVE(MouseCtrl) {
 		; DllCall("TrackMouseEvent", "UInt", &this.TME)
@@ -381,201 +620,6 @@
 		this.Canvas.Control("Hide", this.hButtonMenu4H)
 		;this.Canvas.Control("Hide", this.hButtonMenuToolsH)
 	}
-
-	GuiClose() {
-		
-		HotKey.Disable(this.SuspendKey)
-		; Relase wm_message hooks
-		For each, Msg in [0x200, 0x201, 0x202, 0x2A3]
-			OnMessage(Msg, this.Bound.OnMessage, 0)
-
-		; this.Bound.__Run.__Delete()
-		; this.Bound.__Run := ""
-		; this.Bound.__Run.Stop()
-		; this.Bound.__Run := ""
-		; this.Bound.mt := ""
-		; this.Bound.asm := ""
-
-		this.Tracker := ""
-		this.Delete("Bound")
-		WinEvents.Unregister(this.Canvas.hwnd)
-		
-		this.Canvas.Release_glabel(this.StartBtn)
-		this.Canvas.Destroy()
-
-		; Release menu bar (Has to be done after Gui, Destroy)
-		For each, MenuName in this.Menus
-			Menu, %MenuName%, DeleteAll
-
-		this.Canvas.__Delete()
-		this.CloseCallback()
-	}
-
-	GuiSize() {
-		If (ErrorLevel = 1)
-			Return
-
-		this.Canvas.Control("MoveDraw", this.hTitleHeader, " w" A_GuiWidth-2)
-		this.Canvas.Control("MoveDraw", this.hBorderLeft, " h" A_GuiHeight)
-		this.Canvas.Control("MoveDraw", this.hBorderRight, " x"  A_GuiWidth-1 " h" A_GuiHeight)
-		this.Canvas.Control("MoveDraw", this.hBorderBottom, " y" A_GuiHeight-1 " w" A_GuiWidth-2)
-		this.Canvas.Control("MoveDraw", this.hTitle, " w" A_GuiWidth-280)
-		this.Canvas.Control("MoveDraw", this.hStatusBar, " w" A_GuiWidth-2 " y" A_GuiHeight-23)
-		this.Canvas.Control("MoveDraw", this.hStatusBarText, " w" A_GuiWidth-16 " y" A_GuiHeight-19)
-		this.Canvas.Control("MoveDraw", this.hButtonMinimizeN, " x" A_GuiWidth-139)
-		this.Canvas.Control("MoveDraw", this.hButtonMinimizeH, " x" A_GuiWidth-139)
-		this.Canvas.Control("MoveDraw", this.hButtonMinimizeP, " x" A_GuiWidth-139)
-		this.Canvas.Control("MoveDraw", this.hButtonMaximizeN, " x" A_GuiWidth-93)
-		this.Canvas.Control("MoveDraw", this.hButtonMaximizeH, " x" A_GuiWidth-93)
-		this.Canvas.Control("MoveDraw", this.hButtonMaximizeP, " x" A_GuiWidth-93)
-		this.Canvas.Control("MoveDraw", this.hButtonRestoreN, " x" A_GuiWidth-93)
-		this.Canvas.Control("MoveDraw", this.hButtonRestoreH, " x" A_GuiWidth-93)
-		this.Canvas.Control("MoveDraw", this.hButtonRestoreP, " x" A_GuiWidth-93)
-		this.Canvas.Control("MoveDraw", this.hButtonCloseN, " x" A_GuiWidth-47)
-		this.Canvas.Control("MoveDraw", this.hButtonCloseH, " x" A_GuiWidth-47)
-		this.Canvas.Control("MoveDraw", this.hButtonCloseP, " x" A_GuiWidth-47)
-	}
-
-	CreateMenuBar(Menu) {
-		static MenuName := 0
-		Menus := ["OW_" MenuName++]
-		for each, Item in Menu
-		{
-			Ref := Item[2]
-			if IsObject(Ref) && Ref._NewEnum()
-			{
-				SubMenus := this.CreateMenuBar(Ref)
-				Menus.Push(SubMenus*), Ref := ":" SubMenus[1]
-			}
-			Menu, % Menus[1], Add, % Item[1], %Ref%
-		}
-		return Menus
-	}
-
-	Class MenuButtons 
-	{
-		__New(Parent) {
-			this.Parent := Parent
-		}
-		
-		AimKey() {
-			this.__Toggle(this.Parent.AimKey)
-			this.Parent.AimKey := A_ThisMenuItem
-			this.__Ready()
-		}
-
-		SuspendKey() {
-			this.__Toggle(this.Parent.SuspendKey)
-
-			If (this.Parent.SuspendKey)
-				HotKey.Rebind(this.Parent.SuspendKey, A_ThisMenuItem)
-			Else
-				Hotkey.Bind(A_ThisMenuItem, ObjBindMethod(this.Parent, "__Pause"))
-
-			this.Parent.SuspendKey := A_ThisMenuItem
-
-			; For Key, Value in ["CapsLock", "MButton", "F1", "Alt"]
-			; 	Menu, % A_ThisMenu, Disable, % Value
-
-			this.__Ready()
-		}
-
-		Sensitivity() {
-			this.__Toggle(this.Parent.Sensitivity)
-			this.Parent.Sensitivity := A_ThisMenuItem
-			this.__Ready()
-		}
-
-		Custom() {
-			Gui, % WinExist("A") ": +OwnDialogs"
-			InputBox, OutputVar, Sensitivity, input number for Sensitivity,, 300, 150,,,,, type number (0.00~100.00)
-			If (ErrorLevel = 0)
-			{
-				; to prevent duplicate items (eg, 1, 2, 3 ...)
-				If OutputVar Is Float
-					OutputVar := OutputVar . "0"
-				Else If OutputVar Is Integer
-					OutputVar := OutputVar . ".0"
-				Else
-					Return
-
-				this.__Toggle(this.Parent.Sensitivity)
-				this.Parent.Sensitivity := OutputVar
-				try Menu, % A_ThisMenu, Rename, % A_ThisMenuItem, % this.Parent.Sensitivity
-				this.__Ready()
-			}
-		}
-
-		AntiShake() {
-			Menu, % A_ThisMenu, ToggleCheck, % A_ThisMenuItem
-			this.Parent.Bound.AntiShake := !this.Parent.Bound.AntiShake
-			Menu, % A_ThisMenu, Rename, % A_ThisMenuItem, % (this.Parent.Bound.AntiShake ? "Anti-shake [ON]" : "Anti-shake [OFF]")
-		}
-
-		Humanizer() {
-			; Menu, % A_ThisMenu, ToggleCheck, % A_ThisMenuItem
-			; this.Parent.Bound.Humanizer := !this.Parent.Bound.Humanizer
-			; Menu, % A_ThisMenu, Rename, % A_ThisMenuItem, % (this.Parent.Bound.Humanizer ? "Humanizer on" : "Humanizer off")
-		}
-
-		Rod() {
-			static toggleFlag := 0
-			global InGameSens
-
-			If (toggleFlag)
-			{
-				this.keybdHook := ""
-				Menu, % A_ThisMenu, UnCheck, % "Roadhog Hook lock [ON]"
-				Menu, % A_ThisMenu, Rename, % A_ThisMenuItem, % "Roadhog Hook lock [OFF]"
-				Return toggleFlag := 0
-			}
-
-			Gui, % WinExist("A") ": +OwnDialogs"
-			InputBox, OutputVar, Hook, input your 'in-game' sensitivity,, 300, 150,,,,, only 'in-game' sensitivity (0.00~100.00)
-			If (ErrorLevel = 0)
-			{
-				If OutputVar Is Not Number
-					Return
-
-				InGameSens := OutputVar
-				this.keybdHook := new hHookKeybd(Func("Chase"))
-				Instruction := "Hook lock has been set up"
-				Content := "'Shift' will trigger the hook lock"
-				TaskDialog(Instruction, Content, "Roadhog Hook lock", 0x1, 0xFFFD, "", WinExist("A"))
-				toggleFlag := 1
-				Menu, % A_ThisMenu, Rename, % A_ThisMenuItem, % "Roadhog Hook lock [ON]"
-				Menu, % A_ThisMenu, Check, % "Roadhog Hook lock [ON]"
-			}
-		}
-
-		__Toggle(Item) {
-			If (this.__Toggle_Validate(Item))
-				Return
-
-			If (Item != A_ThisMenuItem) {
-				try Menu, % A_ThisMenu, UnCheck, % Item
-				Menu, % A_ThisMenu, ToggleCheck, % A_ThisMenuItem
-			}
-			Else
-				Menu, % A_ThisMenu, ToggleCheck, % Item
-		}
-
-		__Toggle_Validate(Item) {
-			If (Item = A_ThisMenuItem)
-				Return 1
-			Return 0
-		}
-
-		__Ready() {
-			static ReadyFlag := 0
-
-			If (this.Parent.AimKey) && (this.Parent.SuspendKey) && (this.Parent.Sensitivity) && !(Readyflag) {
-				this.Parent.Canvas.Control("Hide", this.Parent.BoardMsg)
-				this.Parent.Canvas.Control("Show", this.Parent.StartBtn)
-				Readyflag := 1
-			}
-		}
-	}
 }
 
 
@@ -608,34 +652,50 @@ TaskDialog(Instruction, Content := "", Title := "", Buttons := 1, IconID := 0, I
     Return {1: "OK", 2: "Cancel", 4: "Retry", 6: "Yes", 7: "No", 8: "Close"}[Ret]
 }
 
-Chase(nCode, wParam, lParam)
-{
-	static abc := new Tracker(0, A_ScreenWidth)
+_hKeybd(nCode, wParam, lParam) {
 	global InGameSens
 
 	Critical
+
 	SetFormat, IntegerFast, H
 
-	If (wParam = 0x100) 
+	If (wParam = 0x100) && (GetKeyName("vk" NumGet(lParam+0, 0)) = "LShift")
 	{
-		If (GetKeyName("vk" NumGet(lParam+0, 0)) = "LShift")
-		{
-			abc.Calculate(InGameSens, 0, 0)
-		}
+		hKeybd.subc.Calculate(InGameSens, 0, 0)
 	}
 
-	Return hHook.CallNextHookEx(nCode, wParam, lParam)
+	Return DllCall("CallNextHookEx", "Uint", 0, "int", nCode, "Uint", wParam, "Uint", lParam)
 }
 
+Class hKeybd {
+	static subc := new Tracker(0, A_ScreenWidth)
+
+	__New() {
+		this.HookProc := RegisterCallback(Func("_hKeybd"), "Fast")
+		this.Keybd := DllCall("SetWindowsHookEx", "int", 13, "Uint"
+					, this.HookProc
+					, "Uint", DllCall("GetModuleHandle", "Uint", 0, "Ptr"), "Uint", 0, "Ptr")
+	}
+
+	__Delete() {
+		DllCall("UnhookWindowsHookEx", "Uint", this.Keybd)
+		DllCall("GlobalFree", "ptr", this.HookProc)
+        this.Keybd := ""
+	}
+}
 
 #Include %A_LineFile%\..\Class Tracker.ahk
-#Include %A_LineFile%\..\3rd-party\Class hHook.ahk
+;#Include %A_LineFile%\..\3rd-party\Class hHook.ahk
 #Include %A_LineFile%\..\3rd-party\Class PureNotify.ahk
 #Include %A_LineFile%\..\3rd-party\Class GUI.ahk
 #Include %A_LineFile%\..\3rd-party\Class WinEvents.ahk
 #Include %A_LineFile%\..\3rd-party\Class HotKey.ahk
+#Include %A_LineFile%\..\3rd-party\Class DynaScript.ahk
 #Include %A_LineFile%\..\3rd-party\Class JSON.ahk
-;#Include %A_LineFile%\..\3rd-party\Class QuasiThread.ahk
 #Include %A_LineFile%\..\3rd-party\Func DownloadToString.ahk
+; #Include %A_LineFile%\..\3rd-party\Func ObjRegisterActive.ahk
+; #Include %A_LineFile%\..\3rd-party\Func CreateGUID.ahk
+;#Include %A_LineFile%\..\3rd-party\Class Subprocess.ahk
+;#Include %A_LineFile%\..\3rd-party\Class QuasiThread.ahk
 ;#Include %A_LineFile%\..\3rd-party\Func NET Framework Interop.ahk
 ;#Include %A_LineFile%\..\3rd-party\Func AddToolTip.ahk

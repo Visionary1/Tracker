@@ -4,6 +4,8 @@
 ;@Ahk2Exe-SetCopyright Copyright (c) 2017`, 예지력 (https://github.com/Visionary1)
 ;@Ahk2Exe-SetOrigFileName Tracker.exe
 ;@Ahk2Exe-SetCompanyName Copyright (c) 2017`, 예지력 (https://github.com/Visionary1)
+RunAsAdmin()
+
 #SingleInstance, Force
 #NoEnv
 #NoTrayIcon
@@ -24,9 +26,19 @@ If ( Package.version < Package.Main.parsed.version )
 }
 
 Package.Main.RegisterCloseCallback(Func("Terminate"))
-;keybdproc := new hHookKeybd(Func("AdjustHook"))
 
+;keybdproc := new hHookKeybd(Func("AdjustHook"))
 Return
+
+
+; pBrush := Gdip_BrushCreateSolid(0xffff0000)
+; Random, X, 20, 300
+; Gdip_FillRectangle(G, pBrush, X, 5, 200, 300)
+; Gdip_DeleteBrush(pBrush)
+
+; EndDrawGDIP()
+
+
 
 ; AdjustHook(nCode, wParam, lParam)
 ; {
@@ -55,6 +67,7 @@ Terminate()
 }
 
 
+#Include, lib\3rd-party\Func RunAsAdmin.ahk
 #Include, lib\Class OW.ahk
 
 ; Class JSON by CoCo (https://github.com/cocobelgica)
