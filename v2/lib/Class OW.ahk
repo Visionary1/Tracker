@@ -12,7 +12,7 @@
 
 		this.Bound := []
 		this.Bound.OnMessage := this.OnMessage.Bind(this)
-		this.Bound.AntiShake := 0
+		this.Bound.AntiShake := 1
 		this.Bound.Humanizer := 1 ; for it's still under dev
 
 		Buttons := new this.MenuButtons(this)
@@ -50,8 +50,9 @@
 				["8", Buttons.Sensitivity.Bind(Buttons)],
 				["9", Buttons.Sensitivity.Bind(Buttons)]
 			]], ["Advanced", [
-				["Anti-Shake [OFF]", Buttons.AntiShake.Bind(Buttons)],
-				["Humanizer (개발중)", Buttons.Humanizer.Bind(Buttons)],
+				["Set Delay [10]", Buttons.Delay.Bind(Buttons)],
+				["Anti-Shake [ON]", Buttons.AntiShake.Bind(Buttons)],
+				["Humanizer [ON]", Buttons.Humanizer.Bind(Buttons)],
 				["Roadhog Hook lock [OFF]", Buttons.Rod.Bind(Buttons)]
 			]]
 		]
@@ -59,6 +60,9 @@
 
 		this.Menus := this.CreateMenuBar(Menus)
 		this.Canvas.Options("Menu", this.Menu[1])
+		Menu, % "OW_4", Disable, % "Humanizer [ON]"
+		For Key, Value in ["Humanizer [ON]", "Anti-Shake [ON]", "Set Delay [10]"]
+			Menu, % "OW_4", Check, % Value
 
 		this.hBorderLeft := this.Canvas.Add("Text", "x" 0 " y" 0 " w" 1 " h" Window.Height " +0x4E")
 		this.hBorderRight := this.Canvas.Add("Text", "x" Window.Width-1 " y" 0 " w" 1 " h" Window.Height " +0x4E")
@@ -189,9 +193,9 @@
 		;DllCall("SendMessage", "Ptr", this.hButtonMenu2N, "UInt", 0x172, "Ptr", 0, "Ptr", CreateDIB("0173C7", 1, 1))
 		;DllCall("SendMessage", "Ptr", this.hButtonMenu2H, "UInt", 0x172, "Ptr", 0, "Ptr", CreateDIB("2A8AD4", 1, 1))
 
-		this.hButtonMenu3N := this.Canvas.Add("Picture", " x+" 2 " yp" 0 " w" 60 " h" 24 " +0x4E Hidden0")
+		this.hButtonMenu3N := this.Canvas.Add("Picture", " x+" 2 " yp" 0 " w" 80 " h" 24 " +0x4E Hidden0")
 		this.hButtonMenu3H := this.Canvas.Add("Picture", " xp" 0 " yp" 0 " wp" 0 " hp" 0 " +0x4E Hidden1")
-		this.hButtonMenu3Text := this.Canvas.Add("Text", " xp" 0 " yp" 0 " wp" 0 " hp" 0 " +BackgroundTrans +0x201", "Sensitivity")
+		this.hButtonMenu3Text := this.Canvas.Add("Text", " xp" 0 " yp" 0 " wp" 0 " hp" 0 " +BackgroundTrans +0x201", "Smoothness")
 		;DllCall("SendMessage", "Ptr", this.hButtonMenu3N, "UInt", 0x172, "Ptr", 0, "Ptr", CreateDIB("0173C7", 1, 1))
 		;DllCall("SendMessage", "Ptr", this.hButtonMenu3H, "UInt", 0x172, "Ptr", 0, "Ptr", CreateDIB("2A8AD4", 1, 1))
 
@@ -215,7 +219,8 @@
 		For each, Msg in [0x200, 0x201, 0x202, 0x2A3] ; WM_MOUSEMOVE, WM_LBUTTONDOWN, WM_LBUTTONUP, WM_MOUSELEAVE
 			OnMessage(Msg, this.Bound.OnMessage)
 
-		VarSetCapacity(this.TME, 16, 0), NumPut(16, this.TME, 0), NumPut(2, this.TME, 4), NumPut(hGui1, this.TME, 8)
+		global TME
+		VarSetCapacity(TME, 16, 0), NumPut(16, TME, 0), NumPut(2, TME, 4), NumPut(this.Canvas.hwnd, TME, 8)
 	}
 
 	RegisterCloseCallback(CloseCallback) {
@@ -255,14 +260,15 @@
 
 	__Run() {  ;reserved for internal use
 
-		this.Bound.delay := A_IsCompiled ? SubStr(A_ScriptName, 1, -4) : 10
+		;this.Bound.delay := A_IsCompiled ? SubStr(A_ScriptName, 1, -4) : 10
+		this.Bound.Delay := this.Bound.Delay ? this.Bound.Delay : 10
 
 		While, 1
 		{
 			If (this.Tracker.Firing(this.AimKey))
 				this.Tracker.Calculate(this.Sensitivity, this.Bound.AntiShake, this.Bound.Humanizer)
-			
-			DllCall("Sleep", "UInt", this.Bound.delay)
+
+			DllCall("Sleep", "UInt", this.Bound.Delay)
 		}
 	}
 
@@ -315,8 +321,7 @@
 		return Menus
 	}
 
-	Class MenuButtons 
-	{
+	Class MenuButtons {
 		__New(Parent) {
 			this.Parent := Parent
 		}
@@ -369,6 +374,20 @@
 			}
 		}
 
+		Delay()
+		{
+			Gui, % WinExist("A") ": +OwnDialogs"
+			InputBox, OutputVar, Delay, Set default sleep time for each process,, 300, 150,,,,, in millisecond (10 = 0.01 sec)
+			If (ErrorLevel = 0)
+			{
+				If OutputVar Is Not Number
+					Return
+
+				this.Parent.Bound.Delay := OutputVar
+				Menu, % A_ThisMenu, Rename, % A_ThisMenuItem, % "Delay [" this.Parent.Bound.Delay "]"
+			}
+		}
+
 		AntiShake() {
 			Menu, % A_ThisMenu, ToggleCheck, % A_ThisMenuItem
 			this.Parent.Bound.AntiShake := !this.Parent.Bound.AntiShake
@@ -383,7 +402,7 @@
 
 		Rod() {
 			static toggleFlag := 0 ;, CSID, obj
-			global InGameSens
+			;global InGameSens
 
 			/*
 			If !CSID
@@ -438,9 +457,10 @@
 			
 			If (toggleFlag)
 			{
-				this.KeybdHook := ""
-				Menu, % A_ThisMenu, UnCheck, % "Roadhog Hook lock [ON]"
-				Menu, % A_ThisMenu, Rename, % A_ThisMenuItem, % "Roadhog Hook lock [OFF]"
+				;this.KeybdHook := ""
+				this.Parent.Bound.Lock := ""
+				Menu, % A_ThisMenu, UnCheck, % "Roadhog Hook Lock [ON]"
+				Menu, % A_ThisMenu, Rename, % A_ThisMenuItem, % "Roadhog Hook Lock [OFF]"
 				Return toggleFlag := 0
 			}
 
@@ -451,15 +471,16 @@
 				If OutputVar Is Not Number
 					Return
 
-				InGameSens := OutputVar
-				this.KeybdHook := new hKeybd()
+				;InGameSens := OutputVar
+				this.Parent.Bound.Lock := new hKeyBd(ObjBindMethod(AimLock, "RoadHog", OutputVar))
+				;this.KeybdHook := new hKeybd()
 
 				Instruction := "Hook lock has been set up", Content := "'Shift' will trigger the hook lock"
 				TaskDialog(Instruction, Content, "Roadhog Hook lock", 0x1, 0xFFFD, "", WinExist("A"))
 
 				toggleFlag := 1
-				Menu, % A_ThisMenu, Rename, % A_ThisMenuItem, % "Roadhog Hook lock [ON]"
-				Menu, % A_ThisMenu, Check, % "Roadhog Hook lock [ON]"
+				Menu, % A_ThisMenu, Rename, % A_ThisMenuItem, % "Roadhog Hook Lock [ON]"
+				Menu, % A_ThisMenu, Check, % "Roadhog Hook Lock [ON]"
 			}
 			
 		}
@@ -519,8 +540,10 @@
 	}
 
 	OnMessage(wParam, lParam, Msg, hWnd) {
+		global TME
+
 		If (hWnd == this.Canvas.hwnd) {
-			DllCall("TrackMouseEvent", "UInt", &this.TME)
+			DllCall("TrackMouseEvent", "UInt", &TME)
 			MouseGetPos,,,, MouseCtrl, 2
 
 			If (Msg == 0x200)
@@ -623,69 +646,8 @@
 }
 
 
-TaskDialog(Instruction, Content := "", Title := "", Buttons := 1, IconID := 0, IconRes := "", Owner := 0x10010) {
-    Local hModule, LoadLib, Ret
-
-    If (IconRes != "") {
-        hModule := DllCall("GetModuleHandle", "Str", IconRes, "Ptr")
-        LoadLib := !hModule
-            && hModule := DllCall("LoadLibraryEx", "Str", IconRes, "UInt", 0, "UInt", 0x2)
-    } Else {
-        hModule := 0
-        LoadLib := False
-    }
-
-    DllCall("TaskDialog"
-        , "UInt", Owner        ; hWndParent
-        , "UInt", hModule      ; hInstance
-        , "UInt", &Title       ; pszWindowTitle
-        , "UInt", &Instruction ; pszMainInstruction
-        , "UInt", &Content     ; pszContent
-        , "UInt", Buttons      ; dwCommonButtons
-        , "UInt", IconID       ; pszIcon
-        , "Int*", Ret := 0)    ; *pnButton
-
-    If (LoadLib) {
-        DllCall("FreeLibrary", "UInt", hModule)
-    }
-
-    Return {1: "OK", 2: "Cancel", 4: "Retry", 6: "Yes", 7: "No", 8: "Close"}[Ret]
-}
-
-_hKeybd(nCode, wParam, lParam) {
-	global InGameSens
-
-	Critical
-
-	SetFormat, IntegerFast, H
-
-	If (wParam = 0x100) && (GetKeyName("vk" NumGet(lParam+0, 0)) = "LShift")
-	{
-		hKeybd.subc.Calculate(InGameSens, 0, 0)
-	}
-
-	Return DllCall("CallNextHookEx", "Uint", 0, "int", nCode, "Uint", wParam, "Uint", lParam)
-}
-
-Class hKeybd {
-	static subc := new Tracker(0, A_ScreenWidth)
-
-	__New() {
-		this.HookProc := RegisterCallback(Func("_hKeybd"), "Fast")
-		this.Keybd := DllCall("SetWindowsHookEx", "int", 13, "Uint"
-					, this.HookProc
-					, "Uint", DllCall("GetModuleHandle", "Uint", 0, "Ptr"), "Uint", 0, "Ptr")
-	}
-
-	__Delete() {
-		DllCall("UnhookWindowsHookEx", "Uint", this.Keybd)
-		DllCall("GlobalFree", "ptr", this.HookProc)
-        this.Keybd := ""
-	}
-}
-
 #Include %A_LineFile%\..\Class Tracker.ahk
-;#Include %A_LineFile%\..\3rd-party\Class hHook.ahk
+#Include %A_LineFile%\..\3rd-party\Class hHook.ahk
 #Include %A_LineFile%\..\3rd-party\Class PureNotify.ahk
 #Include %A_LineFile%\..\3rd-party\Class GUI.ahk
 #Include %A_LineFile%\..\3rd-party\Class WinEvents.ahk
@@ -693,6 +655,7 @@ Class hKeybd {
 #Include %A_LineFile%\..\3rd-party\Class DynaScript.ahk
 #Include %A_LineFile%\..\3rd-party\Class JSON.ahk
 #Include %A_LineFile%\..\3rd-party\Func DownloadToString.ahk
+#Include %A_LineFile%\..\3rd-party\Func TaskDialog.ahk
 ; #Include %A_LineFile%\..\3rd-party\Func ObjRegisterActive.ahk
 ; #Include %A_LineFile%\..\3rd-party\Func CreateGUID.ahk
 ;#Include %A_LineFile%\..\3rd-party\Class Subprocess.ahk

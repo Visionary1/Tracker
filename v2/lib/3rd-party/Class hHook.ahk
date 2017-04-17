@@ -1,46 +1,65 @@
-﻿Class hHook
+﻿Class hKeyBd
 {
-	static WH_MOUSE_LL := 14, WH_KEYBOARD_LL := 13
-
-	UnHook(hHook) {
-		this.UnhookWindowsHookEx(hHook)
+	__New(Callback) 
+	{
+		this.Callback := Callback
+		this.HookProc := RegisterCallback("_hKeybd", "F",, &this)
+		this.Hook := DllCall( "SetWindowsHookEx"
+							, "Int", 13
+							, "UInt", this.HookProc
+							, "UInt", DllCall("GetModuleHandle", "Uint", 0, "Ptr")
+							, "Uint", 0
+							, "Ptr")
 	}
 
-	UnhookWindowsHookEx(hHook) {
-		Return DllCall("UnhookWindowsHookEx", "Uint", hHook)
-	}
-
-	CallNextHookEx(nCode, wParam, lParam, hHook = 0) {
-		Return DllCall("CallNextHookEx", "Uint", hHook, "int", nCode, "Uint", wParam, "Uint", lParam)
-	}
-
-	SetWindowsHookEx(idHook, pfn) {
-		Return DllCall("SetWindowsHookEx", "int", idHook, "Uint", pfn, "Uint", DllCall("GetModuleHandle", "Uint", 0, "Ptr"), "Uint", 0, "Ptr")
-		;Return DllCall("SetWindowsHookEx", "int", idHook, "Uint", pfn, "Uint", DllCall("GetModuleHandle", "Uint", 0), "Uint", 0)
+	__Delete() 
+	{
+		DllCall("UnhookWindowsHookEx", "Uint", this.Hook)
+		DllCall("GlobalFree", "Ptr", this.HookProc)
+        this.Hook := ""
+        this.Callback := ""
 	}
 }
 
-; Class hHookMouse extends hHook
-; {
-; 	__New(Func) {
-; 		this.Mouse := this.SetWindowsHookEx(base.WH_MOUSE_LL, RegisterCallback(Func, "Fast"))
-; 	}
+_hKeybd(nCode, wParam, lParam) 
+{
+	Critical
 
-; 	__Delete() {
-; 		this.UnHook(this.Mouse)
-; 	}
-; }
+	this := Object(A_EventInfo)
 
-; Class hHookKeybd extends hHook
-; {
-; 	__New(Func) {
-; 		this.Keybd := this.SetWindowsHookEx(base.WH_KEYBOARD_LL, RegisterCallback(Func, "Fast"))
-; 	}
+	If (wParam = 0x100)
+	{
+		;this.Callback.Calculate(4, 0, 0)
+		this.Callback.Call(lParam)
+	}
 
-; 	__Delete() {
-; 		this.UnHook(this.Keybd)
-; 	}
-; }
+	Return DllCall("CallNextHookEx", "UInt", 0, "Int", nCode, "UInt", wParam, "UInt", lParam)
+}
+
+/*
+Class hMouse
+{
+	__New(Callback) 
+	{
+		this.Callback := Callback
+		this.HookProc := RegisterCallback("_hMouse", "F",, &this)
+		this.Hook := DllCall( "SetWindowsHookEx"
+							, "Int", 14
+							, "UInt", this.HookProc
+							, "UInt", DllCall("GetModuleHandle", "Uint", 0, "Ptr")
+							, "Uint", 0
+							, "Ptr")
+	}
+
+	__Delete() 
+	{
+		DllCall("UnhookWindowsHookEx", "Uint", this.Hook)
+		DllCall("GlobalFree", "Ptr", this.HookProc)
+        this.Hook := ""
+	}
+}
+
+;static WH_MOUSE_LL := 14, WH_KEYBOARD_LL := 13
 
 ; __hHookKeybd(nCode, wParam, lParam)
 ; {
