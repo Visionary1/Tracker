@@ -1,0 +1,14 @@
+﻿Aim
+	: Tracks health bar when being pressed
+
+Suspend
+	: toggle to on/off
+
+Sensitivity
+	: lower if aim shakes too much
+
+Advanced
+	: Anti-shake - skip tracking process if it's not necessary
+	: Humanizer - on for smooth move, off for instant move
+
+설정은 시작 이후에도 변경 가능해요
