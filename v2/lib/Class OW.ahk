@@ -656,7 +656,7 @@
 #Include %A_LineFile%\..\3rd-party\Class GUI.ahk
 #Include %A_LineFile%\..\3rd-party\Class WinEvents.ahk
 #Include %A_LineFile%\..\3rd-party\Class HotKey.ahk
-#Include %A_LineFile%\..\3rd-party\Class DynaScript.ahk
+;#Include %A_LineFile%\..\3rd-party\Class DynaScript.ahk
 #Include %A_LineFile%\..\3rd-party\Class JSON.ahk
 #Include %A_LineFile%\..\3rd-party\Func DownloadToString.ahk
 #Include %A_LineFile%\..\3rd-party\Func TaskDialog.ahk

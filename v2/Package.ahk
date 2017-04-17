@@ -4,7 +4,7 @@
 ;@Ahk2Exe-SetCopyright Copyright (c) 2017`, 예지력 (https://github.com/Visionary1)
 ;@Ahk2Exe-SetOrigFileName Tracker.exe
 ;@Ahk2Exe-SetCompanyName Copyright (c) 2017`, 예지력 (https://github.com/Visionary1)
-RunAsAdmin()
+;RunAsAdmin()
 #SingleInstance, Force
 #NoEnv
 ;#NoTrayIcon
