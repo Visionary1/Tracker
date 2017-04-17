@@ -7,7 +7,7 @@
 RunAsAdmin()
 #SingleInstance, Force
 #NoEnv
-#NoTrayIcon
+;#NoTrayIcon
 ;#Warn
 #KeyHistory, 0
 ListLines, Off
@@ -15,20 +15,26 @@ SetBatchLines, -1
 SetWinDelay, -1
 SetControlDelay, -1
 CoordMode, Pixel, Screen
+OnExit("Terminate")
+
+SplashTextOn, , , Loading...
 
 Package := {Main: new OW(), version: 0.3}
 
-If ( Package.version < Package.Main.parsed.version )
-{
+If ( Package.version < Package.Main.parsed.version ) {
 	try Run, % parsed.updateurl
 	ExitApp
 }
 
 Package.Main.RegisterCloseCallback(Func("Terminate"))
+SplashTextOff
 Return
 
 Terminate()
 {
+	global Package
+	
+	Package.Main := ""
 	ExitApp
 }
 

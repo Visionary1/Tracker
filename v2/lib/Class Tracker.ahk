@@ -7,30 +7,15 @@
 		this.Mouse.Move := DynaCall("SendInput", ["uiti", 2], 1, _lpinput := 0, 28)
 		this.Mouse.Speed := new SetMouseSpeed(10)
 
-		; DllCall("mouse_event", uint, dwFlags, int, dx ,int, dy, uint, dwData, int, 0)
-		; DllCall("mouse_event", uint, 0, int, dx ,int, dy, uint, 0, int, 0)
-		; DynaCall("mouse_event", ["uiiiii"], 0x0001)
-		; this.buffer := new hHookMouse(Func("__hHookMouse"))
-		; this.buffer := new hHookKeybd(Func("__hHookKeybd"))
-		; this.bufferflag := 0
-		; xa := 1
-		; ya := -3
-		; While, !WinExist("오버워치")
-		; 	Sleep, 50
-
 		; reserved for future use
 		; GetClientRect(WinExist("오버워치"),(rc:=Struct("Int left,top,right,bottom"))[])
 		; TaskDialog("'OverWatch' detected", rc.right "x" rc.bottom, "Tracker", 0x1, 0xFFFD)
 
 		this.offset := {modifier: 0.3712
 			, x: 45 - A_ScreenWidth / 2 ;Round(0.0234375*A_ScreenWidth - A_ScreenWidth/2) ; 45 - 
-			, y: 67 - A_ScreenHeight / 2 ;Round(0.06481481481*A_ScreenHeight - A_ScreenHeight/2) ; 70 - 
+			, y: 70 - A_ScreenHeight / 2 ;Round(0.06481481481*A_ScreenHeight - A_ScreenHeight/2) ; 70 - 
 			, plus: {l: 0, r: 0}} ;Round(-0.43518518519 * A_ScreenHeight)} ;(85 + ya * 5) - A_ScreenHeight/2}
 
-		; this.X1 := 775
-		; this.X2 := 775 + 370
-		; this.Y1 := 410
-		; this.Y2 := 410 + 185
 		this.X1 := X1 ? X1 : Round(A_ScreenWidth * 0.3) ;A_ScreenWidth/2 - A_ScreenWidth/5
 		this.Y1 := Round(A_ScreenHeight * 0.25) ;A_ScreenHeight/2 - A_ScreenHeight/4
 		this.X2 := X2 ? X2 : Round(A_ScreenWidth *0.7) ;A_ScreenWidth/2 + A_ScreenWidth/5
@@ -51,8 +36,6 @@
 	{
 		Call(self, Sensitivity, AntiShake, Humanizer) {
 
-			;ToolTip, % Sensitivity "`n" AntiShake "`n" Humanizer "`n" A_TickCount
-
 			If !WinActive("오버워치")
 				Return
 
@@ -66,20 +49,9 @@
 			If (AntiShake)
 				this.AntiShake(delta, x, y)
 
-			If (Humanizer)
-				this.Humanizer(self, delta, Sensitivity, x, y)
-			Else
-				this.MoveMouse(self, x * (10 / Sensitivity), y * (10 / Sensitivity))
-			; x := x * (10 / Sensitivity) ;instant move
-			; y := y * (10 / Sensitivity) ;instant move
-			; x := Humanizer ? (x * self.offset.modifier * Sensitivity) : x * (10 / Sensitivity)
-			; y := Humanizer ? (y * self.offset.modifier * Sensitivity) : y * (10 / Sensitivity)
-			; modifier := Sensitivity * 0.09
-			; x := x / modifier
-			; y := y / modifier
-
-			;this.MoveMouse(self, x, y)
-			;Humanizer ? this.Humanizer(self, delta, x, y) : this.MoveMouse(self, x * (10 / Sensitivity), y * (10 / Sensitivity))
+			Humanizer 
+			? this.Humanizer(self, delta, Sensitivity, x, y)
+			: this.MoveMouse(self, x * (10 / Sensitivity), y * (10 / Sensitivity))
 		}
 
 		; private methods callable only from within Tracker.Calculate()

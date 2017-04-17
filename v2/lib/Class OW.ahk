@@ -3,7 +3,6 @@
 	__New() {
 		
 		parsed := JSON.Load(DownloadToStr("https://raw.githubusercontent.com/Visionary1/Tracker/master/info.json"))
-
 		Window := {Width: 500, Height: 300, Title: parsed.title " " parsed.version, StatusBarText: parsed.StatusBarText}
 
 		this.Canvas := new GUI(Window.Title, "+LastFound -Resize -Caption -Border")
@@ -63,6 +62,7 @@
 		Menu, % "OW_4", Disable, % "Humanizer [ON]"
 		For Key, Value in ["Humanizer [ON]", "Anti-Shake [ON]", "Set Delay [10]"]
 			Menu, % "OW_4", Check, % Value
+		Menu, Tray, NoStandard
 
 		this.hBorderLeft := this.Canvas.Add("Text", "x" 0 " y" 0 " w" 1 " h" Window.Height " +0x4E")
 		this.hBorderRight := this.Canvas.Add("Text", "x" Window.Width-1 " y" 0 " w" 1 " h" Window.Height " +0x4E")
@@ -272,7 +272,11 @@
 		}
 	}
 
-	__Pause() { ;reserved for internal use
+	__Pause() { ;reserved for internal Use
+		static flag := True
+
+		TrayTip, % "Tracker", % flag ? "OFF" : "ON"
+		flag := !flag
 		Pause, Toggle, 1
 	}
 
