@@ -48,7 +48,7 @@
 
 			If (AntiShake)
 				this.AntiShake(delta, x, y)
-
+				
 			Humanizer 
 			? this.Humanizer(self, delta, Sensitivity, x, y)
 			: this.MoveMouse(self, x * (10 / Sensitivity), y * (10 / Sensitivity))
