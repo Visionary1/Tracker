@@ -21,8 +21,8 @@ SplashTextOn, , , Loading...
 
 Package := {Main: new OW(), version: 0.3}
 
-If ( Package.version < Package.Main.parsed.version ) {
-	try Run, % parsed.updateurl
+If ( Package.Main.parsed.version - Package.version > 0 ) {
+	try Run, % Package.Main.parsed.updateurl
 	ExitApp
 }
 

@@ -2,9 +2,10 @@
 {
 	__New() {
 		
-		parsed := JSON.Load(DownloadToStr("https://raw.githubusercontent.com/Visionary1/Tracker/master/info.json"))
-		Window := {Width: 500, Height: 300, Title: parsed.title " " parsed.version, StatusBarText: parsed.StatusBarText}
-
+		this.parsed := JSON.Load(DownloadToStr("https://raw.githubusercontent.com/Visionary1/Tracker/master/info.json"))
+		Window := {Width: 500, Height: 300, Title: this.parsed.title " " this.parsed.version, StatusBarText: this.parsed.StatusBarText}
+		this.parsed := ""
+		
 		this.Canvas := new GUI(Window.Title, "+LastFound -Resize -Caption -Border")
 		this.Canvas.Color("FFFFFF")
 		this.Canvas.Margin(10, 10)
