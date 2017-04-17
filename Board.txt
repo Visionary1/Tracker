@@ -4,11 +4,11 @@
 Suspend
 	: toggle to on/off
 
-Sensitivity
-	: lower if aim shakes too much
+Smoothness
+	: HIGHER if aim shakes
 
 Advanced
 	: Anti-shake - skip tracking process if it's not necessary
-	: Humanizer - on for smooth move, off for instant move
+	: Delay - default delay time after aim move (10 = 0.01 sec)
 
-설정은 시작 이후에도 변경 가능해요
+All settings can be changed while running
