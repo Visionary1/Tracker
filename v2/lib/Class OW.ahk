@@ -1,21 +1,25 @@
 ﻿Class OW
 {
-	__New() {
-		
+	__New()
+	{
 		this.parsed := JSON.Load(DownloadToStr("https://raw.githubusercontent.com/Visionary1/Tracker/master/info.json"))
+		UrlDownloadToFile, https://github.com/Visionary1/Tracker/raw/master/v2/lib/MicroTimer.dll, % A_Temp . "\MicroTimer.dll"
+
 		Window := {Width: 500, Height: 300, Title: this.parsed.title " " this.parsed.version, StatusBarText: this.parsed.StatusBarText}
 		this.parsed := ""
-		
+
 		this.Canvas := new GUI(Window.Title, "+LastFound -Resize -Caption -Border")
 		this.Canvas.Color("FFFFFF")
 		this.Canvas.Margin(10, 10)
 
 		this.Bound := []
-		this.Bound.OnMessage := this.OnMessage.Bind(this)
+		this.Bound.OnMessage := ObjBindMethod(OW.OnMessage, "Calls", this) ;this.OnMessage.Bind(this) 
 		this.Bound.AntiShake := 1
 		this.Bound.Humanizer := 1 ; for it's still under dev
+		this.Bound.Alternative := 1 ; this is better?
+		this.Bound.Delay := 30 ;default delay
 
-		Buttons := new this.MenuButtons(this)
+		Buttons := new OW.MenuButtons(this)
 		Menus :=
 		( Join
 		[
@@ -31,39 +35,43 @@
 				["MButton", Buttons.SuspendKey.Bind(Buttons)],
 				["F1", Buttons.SuspendKey.Bind(Buttons)],
 				["Alt", Buttons.SuspendKey.Bind(Buttons)]
-			]], ["Sensitivity", [
+			]], ["Smoothness", [
 				["Manually", Buttons.Custom.Bind(Buttons)],
-				["1", Buttons.Sensitivity.Bind(Buttons)],
-				["1", Buttons.Sensitivity.Bind(Buttons)],
-				["1.5", Buttons.Sensitivity.Bind(Buttons)],
-				["2", Buttons.Sensitivity.Bind(Buttons)],
-				["2.5", Buttons.Sensitivity.Bind(Buttons)],
-				["3", Buttons.Sensitivity.Bind(Buttons)],
-				["3.5", Buttons.Sensitivity.Bind(Buttons)],
-				["4", Buttons.Sensitivity.Bind(Buttons)],
-				["4.5", Buttons.Sensitivity.Bind(Buttons)],
-				["5", Buttons.Sensitivity.Bind(Buttons)],
-				["5.5", Buttons.Sensitivity.Bind(Buttons)],
-				["6", Buttons.Sensitivity.Bind(Buttons)],
-				["6.5", Buttons.Sensitivity.Bind(Buttons)],
-				["7", Buttons.Sensitivity.Bind(Buttons)],
-				["8", Buttons.Sensitivity.Bind(Buttons)],
-				["9", Buttons.Sensitivity.Bind(Buttons)]
+				["1", Buttons.Smoothness.Bind(Buttons)],
+				["1", Buttons.Smoothness.Bind(Buttons)],
+				["1.5", Buttons.Smoothness.Bind(Buttons)],
+				["2", Buttons.Smoothness.Bind(Buttons)],
+				["2.5", Buttons.Smoothness.Bind(Buttons)],
+				["3", Buttons.Smoothness.Bind(Buttons)],
+				["3.5", Buttons.Smoothness.Bind(Buttons)],
+				["4", Buttons.Smoothness.Bind(Buttons)],
+				["4.5", Buttons.Smoothness.Bind(Buttons)],
+				["5", Buttons.Smoothness.Bind(Buttons)],
+				["5.5", Buttons.Smoothness.Bind(Buttons)],
+				["6", Buttons.Smoothness.Bind(Buttons)],
+				["6.5", Buttons.Smoothness.Bind(Buttons)],
+				["7", Buttons.Smoothness.Bind(Buttons)],
+				["8", Buttons.Smoothness.Bind(Buttons)],
+				["9", Buttons.Smoothness.Bind(Buttons)]
 			]], ["Advanced", [
-				["Set Delay [10]", Buttons.Delay.Bind(Buttons)],
+				["Set Delay [30]", Buttons.Delay.Bind(Buttons)],
 				["Anti-Shake [ON]", Buttons.AntiShake.Bind(Buttons)],
 				["Humanizer [ON]", Buttons.Humanizer.Bind(Buttons)],
-				["Roadhog Hook lock [OFF]", Buttons.Rod.Bind(Buttons)]
+				["Alternative Mode [ON]", Buttons.Alternative.Bind(Buttons)],
+				["Roadhog Hook lock [OFF]", Buttons.RoadHog.Bind(Buttons)]
 			]]
 		]
 		)
 
-		this.Menus := this.CreateMenuBar(Menus)
+		;OW.Menus := OW.CreateMenuBar(Menus, "OW_")
+		this.Menus := MenuBar.Create(Menus, "OW_")
 		this.Canvas.Options("Menu", this.Menu[1])
-		Menu, % "OW_4", Disable, % "Humanizer [ON]"
-		For Key, Value in ["Humanizer [ON]", "Anti-Shake [ON]", "Set Delay [10]"]
-			Menu, % "OW_4", Check, % Value
-		Menu, Tray, NoStandard
+		;Menu, % "OW_4", Disable, % "Humanizer [ON]"
+		MenuBar.Item.Disable("OW_4", ["Humanizer [ON]", "Alternative Mode [ON]"])
+		MenuBar.Item.Toggle("OW_4", ["Alternative Mode [ON]", "Humanizer [ON]", "Anti-Shake [ON]", "Set Delay [30]"])
+		; For Key, Value in ["Humanizer [ON]", "Anti-Shake [ON]", "Set Delay [10]"]
+		; 	Menu, % "OW_4", Check, % Value
+		MenuBar.Tray.NoStandard()
 
 		this.hBorderLeft := this.Canvas.Add("Text", "x" 0 " y" 0 " w" 1 " h" Window.Height " +0x4E")
 		this.hBorderRight := this.Canvas.Add("Text", "x" Window.Width-1 " y" 0 " w" 1 " h" Window.Height " +0x4E")
@@ -213,89 +221,32 @@
 
 		this.Canvas.Font()
 		this.BoardMsg := this.Canvas.Add("Text", "x20 y80", DownloadToStr("https://raw.githubusercontent.com/Visionary1/Tracker/master/Board.txt"))
-		this.StartBtn := this.Canvas.Add("Button", "x20 y80 w" Window.Width - 40 " h" Window.Height - 120 " Hidden", "initialize", ObjBindMethod(this, "initialize"))
+		this.StartBtn := this.Canvas.Add("Button", "x20 y80 w" Window.Width - 40 " h" Window.Height - 120 " Hidden", "initialize", ObjBindMethod(OW.Run, "Initialize", this))
 		this.Canvas.Show(" w" Window.Width " h" Window.Height)
 
 		WinEvents.Register(this.Canvas.hwnd, this)
 		For each, Msg in [0x200, 0x201, 0x202, 0x2A3] ; WM_MOUSEMOVE, WM_LBUTTONDOWN, WM_LBUTTONUP, WM_MOUSELEAVE
 			OnMessage(Msg, this.Bound.OnMessage)
 
-		global TME
-		VarSetCapacity(TME, 16, 0), NumPut(16, TME, 0), NumPut(2, TME, 4), NumPut(this.Canvas.hwnd, TME, 8)
+		; global TME
+		; VarSetCapacity(TME, 16, 0), NumPut(16, TME, 0), NumPut(2, TME, 4), NumPut(this.Canvas.hwnd, TME, 8)
 	}
 
-	RegisterCloseCallback(CloseCallback) {
-		this.CloseCallback := CloseCallback
-	}
+	GuiClose()
+	{
+		Critical
 
-	initialize() {
-		this.Canvas.Control("Hide", this.StartBtn)
-		this.Canvas.Control("Show", this.BoardMsg)
-
-		this.Tracker := new Tracker()
-
-		this.pn := new PureNotify(this.Tracker.X1, this.Tracker.Y1, (this.Tracker.X2 - this.Tracker.X1), (this.Tracker.Y2 - this.Tracker.Y1))
-		this.pn.Text("initializing..."
-		, "Searching area (" (this.Tracker.X2 - this.Tracker.X1) "x" (this.Tracker.Y2 - this.Tracker.Y1) ")`n`nAim  [" 
-		. this.AimKey "]`nSuspend  [" this.SuspendKey "]`nSensitivity  [" this.Sensitivity
-		. "]`nAnti-shake  " (this.bound.AntiShake ? "[on]" : "[off]")
-		. "`nHumanizer  " (this.bound.Humanizer ? "[on]" : "[off]"))
-		Sleep, 3000
-		this.Delete("pn")
-
-		this.__Run()
-		; this.Bound.__Run := new QuasiThread(ObjBindMethod(this, "__Run"))
-		; this.Bound.__Run.Start(1)
-		;Tick := A_IsCompiled ? SubStr(A_ScriptName, 1, -4) : 0
-		; UrlDownloadToFile, https://github.com/Visionary1/Tracker/raw/master/v2/lib/MicroTimer.dll, % A_Temp . "\MicroTimer.dll"
-		; this.Bound.asm := CLR_LoadLibrary("C:\Users\LG\Documents\GitHub\Tracker\v2\lib\MicroTimer.dll")
-		; ; Use CLR to instantiate a class from within the DLL
-		; this.Bound.mt := this.Bound.asm.CreateInstance("MicroTimer")
-		; this.Bound.__Run := this.Bound.mt.Create(ObjBindMethod(this, "__Run"), 40)
-		; this.Bound.__Run.Start()
-		; this.Bound.asm := CLR_LoadLibrary("C:\Users\LG\Documents\GitHub\Tracker\v2\lib\WaitableTimer.dll")
-		; this.Bound.wt := this.Bound.asm.CreateInstance("WaitableTimer")
-		; this.Bound.__Run := this.Bound.wt.Create(ObjBindMethod(this, "__Run"), 10)
-		; this.Bound.__Run.Start()
-	}
-
-	__Run() {  ;reserved for internal use
-
-		;this.Bound.delay := A_IsCompiled ? SubStr(A_ScriptName, 1, -4) : 10
-		this.Bound.Delay := this.Bound.Delay ? this.Bound.Delay : 10
-
-		While, 1
-		{
-			If (this.Tracker.Firing(this.AimKey))
-				this.Tracker.Calculate(this.Sensitivity, this.Bound.AntiShake, this.Bound.Humanizer)
-
-			DllCall("Sleep", "UInt", this.Bound.Delay)
-		}
-	}
-
-	__Pause() { ;reserved for internal Use
-		static flag := True
-
-		TrayTip, % "Tracker", % flag ? "OFF" : "ON"
-		flag := !flag
-		Pause, Toggle, 1
-	}
-
-	GuiClose() {
-		
+		this.Tracker := ""
 		HotKey.Disable(this.SuspendKey)
 		; Relase wm_message hooks
 		For each, Msg in [0x200, 0x201, 0x202, 0x2A3]
 			OnMessage(Msg, this.Bound.OnMessage, 0)
 
-		; this.Bound.__Run.__Delete()
-		; this.Bound.__Run := ""
-		; this.Bound.__Run.Stop()
-		; this.Bound.__Run := ""
-		; this.Bound.mt := ""
-		; this.Bound.asm := ""
+		If (this.Bound.Alternative)
+		{
+			this.Bound.__Run.Stop(), this.Bound.__Run := "", this.Bound.mt := "", this.Bound.asm := ""
+		}
 
-		this.Tracker := ""
 		this.Delete("Bound")
 		WinEvents.Unregister(this.Canvas.hwnd)
 		
@@ -307,64 +258,133 @@
 			Menu, %MenuName%, DeleteAll
 
 		this.Canvas.__Delete()
-		this.CloseCallback()
+		this.RegisterCloseCallback() ;pushed by interface
+		;this.CloseCallback()
 	}
 
-	CreateMenuBar(Menu) {
-		static MenuName := 0
-		Menus := ["OW_" MenuName++]
-		for each, Item in Menu
+	; RegisterCloseCallback(CloseCallback) {
+	; 	this.CloseCallback := CloseCallback
+	; }
+
+	Class Run
+	{
+		Initialize(self)
 		{
-			Ref := Item[2]
-			if IsObject(Ref) && Ref._NewEnum()
+			self.Canvas.Control("Hide", self.StartBtn), self.Canvas.Control("Show", self.BoardMsg)
+
+			self.Tracker := new Tracker()
+
+			pn := new PureNotify(self.Tracker.X1, self.Tracker.Y1, (self.Tracker.X2 - self.Tracker.X1), (self.Tracker.Y2 - self.Tracker.Y1))
+			pn.Text("Initializing..."
+			, "Searching area is (" (self.Tracker.X2 - self.Tracker.X1) "x" (self.Tracker.Y2 - self.Tracker.Y1) ")`n`nAim [" 
+			. self.AimKey "]`nSuspend [" self.SuspendKey "]`nSmoothness [" self.Sensitivity
+			. "]`nAnti-shake " (self.Bound.AntiShake ? "[ON]" : "[OFF]")
+			. "`nDelay [" self.Bound.Delay "]")
+			Sleep, 3000
+			pn := ""
+
+			If (self.Bound.Alternative)
 			{
-				SubMenus := this.CreateMenuBar(Ref)
-				Menus.Push(SubMenus*), Ref := ":" SubMenus[1]
+				;UrlDownloadToFile, https://github.com/Visionary1/Tracker/raw/master/v2/lib/MicroTimer.dll, % A_Temp . "\MicroTimer.dll"
+				self.Bound.asm := CLR_LoadLibrary(A_Temp . "\MicroTimer.dll")
+				self.Bound.mt := self.Bound.asm.CreateInstance("MicroTimer")
+				self.Bound.__Run := self.Bound.mt.Create(ObjBindMethod(OW.Run, "_Alternative", self), self.Bound.Delay)
+				self.Bound.__Run.Start()
 			}
-			Menu, % Menus[1], Add, % Item[1], %Ref%
+			Else
+			{
+				this._Standard(self)
+			}
 		}
-		return Menus
+
+		_Standard(self)
+		{
+			While, !self.Bound.Alternative
+			{
+				;ToolTip, standard
+				If (self.Tracker.Firing(self.AimKey))
+				{
+					self.Tracker.Calculate(self.Sensitivity, self.Bound.AntiShake, self.Bound.Humanizer)
+				}
+
+				DllCall("Sleep", "UInt", self.Bound.Delay)
+			}
+		}
+
+		_Alternative(self)
+		{
+			;ToolTip, % A_TickCount
+			If (self.Tracker.Firing(self.AimKey))
+			{
+				self.Tracker.Calculate(self.Sensitivity, self.Bound.AntiShake, self.Bound.Humanizer)
+			}
+		}
+
+		Pause()
+		{
+			;static flag := True
+
+			;TrayTip, % "Tracker", % flag ? "OFF" : "ON"
+			;flag := !flag
+			Pause, Toggle, 1
+		}
 	}
 
-	Class MenuButtons {
-		__New(Parent) {
-			this.Parent := Parent
+	Class MenuButtons 
+	{
+		__New(self) 
+		{
+			this.__Parent := &self
+		}
+
+		Parent[] 
+		{
+			get {
+				If (NumGet(this.__Parent) = NumGet(&this)) ; safety check or you can use try/catch/finally
+					Return Object(this.__Parent)
+			}
 		}
 		
-		AimKey() {
-			this.__Toggle(this.Parent.AimKey)
+		AimKey()
+		{
+			;this.__Toggle(this.Parent.AimKey)
+			MenuBar.Item.Toggle(A_ThisMenu, this.Parent.AimKey, A_ThisMenuItem)
 			this.Parent.AimKey := A_ThisMenuItem
 			this.__Ready()
 		}
 
-		SuspendKey() {
-			this.__Toggle(this.Parent.SuspendKey)
+		SuspendKey()
+		{
+			;this.__Toggle(this.Parent.SuspendKey)
+			MenuBar.Item.Toggle(A_ThisMenu, this.Parent.SuspendKey, A_ThisMenuItem)
 
 			If (this.Parent.SuspendKey)
 				HotKey.Rebind(this.Parent.SuspendKey, A_ThisMenuItem)
 			Else
-				Hotkey.Bind(A_ThisMenuItem, ObjBindMethod(this.Parent, "__Pause"))
+				Hotkey.Bind(A_ThisMenuItem, ObjBindMethod(OW.Run, "Pause"))
 
 			this.Parent.SuspendKey := A_ThisMenuItem
-
-			; For Key, Value in ["CapsLock", "MButton", "F1", "Alt"]
-			; 	Menu, % A_ThisMenu, Disable, % Value
-
 			this.__Ready()
 		}
 
-		Sensitivity() {
-			this.__Toggle(this.Parent.Sensitivity)
+		Smoothness()
+		{
+			;this.__Toggle(this.Parent.Sensitivity)
+			MenuBar.Item.Toggle(A_ThisMenu, this.Parent.Sensitivity, A_ThisMenuItem)
 			this.Parent.Sensitivity := A_ThisMenuItem
 			this.__Ready()
 		}
 
-		Custom() {
+		Custom()
+		{
 			Gui, % WinExist("A") ": +OwnDialogs"
-			InputBox, OutputVar, Sensitivity, input number for Sensitivity,, 300, 150,,,,, type number (0.00~100.00)
+			InputBox, OutputVar, Smoothness, input number for Smoothness,, 300, 150,,,,, type number (0.00~100.00)
 			If (ErrorLevel = 0)
 			{
 				; to prevent duplicate items (eg, 1, 2, 3 ...)
+				IF OutputVar = 0
+					Return
+
 				If OutputVar Is Float
 					OutputVar := OutputVar . "0"
 				Else If OutputVar Is Integer
@@ -372,10 +392,31 @@
 				Else
 					Return
 
-				this.__Toggle(this.Parent.Sensitivity)
+				;this.__Toggle(this.Parent.Sensitivity)
+				MenuBar.Item.Toggle(A_ThisMenu, this.Parent.Sensitivity, A_ThisMenuItem)
 				this.Parent.Sensitivity := OutputVar
-				try Menu, % A_ThisMenu, Rename, % A_ThisMenuItem, % this.Parent.Sensitivity
+				MenuBar.Item.Rename(A_ThisMenu, A_ThisMenuItem, this.Parent.Sensitivity)
+				;Try Menu, % A_ThisMenu, Rename, % A_ThisMenuItem, % this.Parent.Sensitivity
 				this.__Ready()
+			}
+		}
+
+		Alternative()
+		{
+			MenuBar.Item.Toggle(A_ThisMenu, A_ThisMenuItem)
+			this.Parent.Bound.Alternative := !this.Parent.Bound.Alternative
+
+			If !(this.Parent.Bound.Alternative) ;turn off Alternative mode and switch to standard
+			{
+				this.Parent.Bound.__Run.Stop()
+				;this.Parent.Bound.__Run := ""
+
+				; has to fix an issue
+				Return this.Parent.Run._Standard(this.Parent)
+			}
+			Else If (this.Parent.Bound.Alternative) ;turn Alternative mode on
+			{
+				Return this.Parent.Bound.__Run.Start()
 			}
 		}
 
@@ -388,24 +429,38 @@
 				If OutputVar Is Not Number
 					Return
 
-				this.Parent.Bound.Delay := OutputVar
-				Menu, % A_ThisMenu, Rename, % A_ThisMenuItem, % "Delay [" this.Parent.Bound.Delay "]"
+				this.Parent.Bound.Delay := Round(OutputVar)
+				MenuBar.Item.Rename(A_ThisMenu, A_ThisMenuItem, "Delay [" this.Parent.Bound.Delay "]")
+
+				If (this.Parent.Bound.Alternative) && (this.Parent.Bound.__Run)
+				{
+					this.Parent.Bound.__Run.Stop()
+					this.Parent.Bound.__Run := ""
+					this.Parent.Bound.__Run := this.Parent.Bound.mt.Create(ObjBindMethod(OW.Run, "_Alternative", Object(this.__Parent)), this.Parent.Bound.Delay)
+					this.Parent.Bound.__Run.Start()
+				}
+				;Menu, % A_ThisMenu, Rename, % A_ThisMenuItem, % "Delay [" this.Parent.Bound.Delay "]"
 			}
 		}
 
-		AntiShake() {
-			Menu, % A_ThisMenu, ToggleCheck, % A_ThisMenuItem
+		AntiShake()
+		{
+			MenuBar.Item.Toggle(A_ThisMenu, A_ThisMenuItem)
+			;Menu, % A_ThisMenu, ToggleCheck, % A_ThisMenuItem
 			this.Parent.Bound.AntiShake := !this.Parent.Bound.AntiShake
-			Menu, % A_ThisMenu, Rename, % A_ThisMenuItem, % (this.Parent.Bound.AntiShake ? "Anti-shake [ON]" : "Anti-shake [OFF]")
+			MenuBar.Item.Rename(A_ThisMenu, A_ThisMenuItem, this.Parent.Bound.AntiShake ? "Anti-shake [ON]" : "Anti-shake [OFF]")
+			;Menu, % A_ThisMenu, Rename, % A_ThisMenuItem, % (this.Parent.Bound.AntiShake ? "Anti-shake [ON]" : "Anti-shake [OFF]")
 		}
 
-		Humanizer() {
+		Humanizer()
+		{
 			; Menu, % A_ThisMenu, ToggleCheck, % A_ThisMenuItem
 			; this.Parent.Bound.Humanizer := !this.Parent.Bound.Humanizer
 			; Menu, % A_ThisMenu, Rename, % A_ThisMenuItem, % (this.Parent.Bound.Humanizer ? "Humanizer on" : "Humanizer off")
 		}
 
-		Rod() {
+		RoadHog()
+		{
 			static toggleFlag := 0 ;, CSID, obj
 			;global InGameSens
 
@@ -464,9 +519,12 @@
 			{
 				;this.KeybdHook := ""
 				this.Parent.Bound.Lock := ""
-				Menu, % A_ThisMenu, UnCheck, % "Roadhog Hook Lock [ON]"
-				Menu, % A_ThisMenu, Rename, % A_ThisMenuItem, % "Roadhog Hook Lock [OFF]"
-				Return toggleFlag := 0
+				MenuBar.Item.Toggle(A_ThisMenu, "Roadhog Hook Lock [ON]")
+				;Menu, % A_ThisMenu, UnCheck, % "Roadhog Hook Lock [ON]"
+				;Menu, % A_ThisMenu, Rename, % A_ThisMenuItem, % "Roadhog Hook Lock [OFF]"
+				MenuBar.Item.Rename(A_ThisMenu, A_ThisMenuItem, "Roadhog Hook Lock [OFF]")
+				toggleFlag := 0
+				Return
 			}
 
 			Gui, % WinExist("A") ": +OwnDialogs"
@@ -484,42 +542,48 @@
 				TaskDialog(Instruction, Content, "Roadhog Hook lock", 0x1, 0xFFFD, "", WinExist("A"))
 
 				toggleFlag := 1
-				Menu, % A_ThisMenu, Rename, % A_ThisMenuItem, % "Roadhog Hook Lock [ON]"
-				Menu, % A_ThisMenu, Check, % "Roadhog Hook Lock [ON]"
+				MenuBar.Item.Rename(A_ThisMenu, A_ThisMenuItem, "Roadhog Hook Lock [ON]")
+				;Menu, % A_ThisMenu, Rename, % A_ThisMenuItem, % "Roadhog Hook Lock [ON]"
+				MenuBar.Item.Toggle(A_ThisMenu, "Roadhog Hook Lock [ON]")
+				;Menu, % A_ThisMenu, Check, % "Roadhog Hook Lock [ON]"
 			}
 			
 		}
 
-		__Toggle(Item) {
-			If (this.__Toggle_Validate(Item))
-				Return
+		; __Toggle(Item)
+		; {
+		; 	If (this.__Toggle_Validate(Item))
+		; 		Return
 
-			If (Item != A_ThisMenuItem) {
-				try Menu, % A_ThisMenu, UnCheck, % Item
-				Menu, % A_ThisMenu, ToggleCheck, % A_ThisMenuItem
-			}
-			Else
-				Menu, % A_ThisMenu, ToggleCheck, % Item
-		}
+		; 	If (Item != A_ThisMenuItem) {
+		; 		try Menu, % A_ThisMenu, UnCheck, % Item
+		; 		Menu, % A_ThisMenu, ToggleCheck, % A_ThisMenuItem
+		; 	}
+		; 	Else
+		; 		Menu, % A_ThisMenu, ToggleCheck, % Item
+		; }
 
-		__Toggle_Validate(Item) {
-			If (Item = A_ThisMenuItem)
-				Return 1
-			Return 0
-		}
+		; __Toggle_Validate(Item)
+		; {
+		; 	If (Item = A_ThisMenuItem)
+		; 		Return 1
+		; 	Return 0
+		; }
 
-		__Ready() {
-			static ReadyFlag := 0
+		__Ready()
+		{
+			static flag := 0
 
-			If (this.Parent.AimKey) && (this.Parent.SuspendKey) && (this.Parent.Sensitivity) && !(Readyflag) {
+			If (this.Parent.AimKey) && (this.Parent.SuspendKey) && (this.Parent.Sensitivity) && !(flag) {
 				this.Parent.Canvas.Control("Hide", this.Parent.BoardMsg)
 				this.Parent.Canvas.Control("Show", this.Parent.StartBtn)
-				Readyflag := 1
+				flag := 1
 			}
 		}
 	}
 
-	GuiSize() {
+	GuiSize()
+	{
 		If (ErrorLevel = 1)
 			Return
 			
@@ -544,110 +608,164 @@
 		this.Canvas.Control("MoveDraw", this.hButtonCloseP, " x" A_GuiWidth-47)
 	}
 
-	OnMessage(wParam, lParam, Msg, hWnd) {
-		global TME
+	; OnMessage(wParam, lParam, Msg, hWnd) {
+	; 	global TME
 
-		If (hWnd == this.Canvas.hwnd) {
-			DllCall("TrackMouseEvent", "UInt", &TME)
-			MouseGetPos,,,, MouseCtrl, 2
+	; 	If (hWnd = this.Canvas.hwnd) 
+	; 	{
+	; 		DllCall("TrackMouseEvent", "UInt", &TME)
+	; 		MouseGetPos,,,, MouseCtrl, 2
 
-			If (Msg == 0x200)
-				Return this.WM_MOUSEMOVE(MouseCtrl)
-			Else If (Msg == 0x201)
-				Return this.WM_LBUTTONDOWN(MouseCtrl)
-			Else If (Msg == 0x202)
-				Return this.WM_LBUTTONUP(MouseCtrl)
-			Else If (Msg == 0x2A3)
-				Return this.WM_MOUSELEAVE()
-		}
-	}
+	; 		this.OnMessage_WM(Msg, MouseCtrl)
 
-	WM_MOUSEMOVE(MouseCtrl) {
-		; DllCall("TrackMouseEvent", "UInt", &this.TME)
+	; 		; If (Msg == 0x200)
+	; 		; 	Return this.WM_MOUSEMOVE(this, MouseCtrl)
+	; 		; Else If (Msg == 0x201)
+	; 		; 	Return this.WM_LBUTTONDOWN(this, MouseCtrl)
+	; 		; Else If (Msg == 0x202)
+	; 		; 	Return this.WM_LBUTTONUP(this, MouseCtrl)
+	; 		; Else If (Msg == 0x2A3)
+	; 		; 	Return this.WM_MOUSELEAVE(this)
+	; 	}
+	; }
 
-		; MouseGetPos,,,, MouseCtrl, 2
+	; CreateMenuBar(Menu, NamePrefix)
+	; {
+	; 	static MenuName := 0
+	; 	;Menus := ["OW_" MenuName++]
+	; 	Menus := [NamePrefix . MenuName++]
+	; 	For each, Item in Menu
+	; 	{
+	; 		Ref := Item[2]
+	; 		If (IsObject(Ref)) && (Ref._NewEnum())
+	; 		{
+	; 			SubMenus := this.CreateMenuBar(Ref, NamePrefix)
+	; 			Menus.Push(SubMenus*), Ref := ":" SubMenus[1]
+	; 		}
+	; 		Menu, % Menus[1], Add, % Item[1], %Ref%
+	; 	}
+	; 	Return Menus
+	; }
 
-		this.Canvas.Control( (MouseCtrl = this.hButtonMinimizeN || MouseCtrl = this.hButtonMinimizeH) ? "Show" : "Hide", this.hButtonMinimizeH )
-		this.Canvas.Control( (MouseCtrl = this.hButtonMaximizeN || MouseCtrl = this.hButtonMaximizeH) ? "Show" : "Hide", this.hButtonMaximizeH )
-		this.Canvas.Control( (MouseCtrl = this.hButtonRestoreN || MouseCtrl = this.hButtonRestoreH) ? "Show" : "Hide", this.hButtonRestoreH )
-		this.Canvas.Control( (MouseCtrl = this.hButtonCloseN || MouseCtrl = this.hButtonCloseH) ? "Show" : "Hide", this.hButtonCloseH )
-		this.Canvas.Control( (MouseCtrl = this.hButtonMenu1Text) ? "Show" : "Hide", this.hButtonMenu1H )
+	Class OnMessage
+	{
+		Calls(self, wParam, lParam, Msg, hWnd)
+		{
+			If (hWnd = self.Canvas.hwnd)
+			{
+				; global TME
+				; If !(TME)
+				; {
+				; 	VarSetCapacity(TME, 16, 0), NumPut(16, TME, 0), NumPut(2, TME, 4), NumPut(self.Canvas.hwnd, TME, 8)
+				; }
+				;global TME
+				;DllCall("TrackMouseEvent", "UInt", &TME)
 
-		this.Canvas.Control( (MouseCtrl = this.hButtonMenu2Text) ? "Show" : "Hide", this.hButtonMenu2H )
-		this.Canvas.Control( (MouseCtrl = this.hButtonMenu3Text) ? "Show" : "Hide", this.hButtonMenu3H )
-		this.Canvas.Control( (MouseCtrl = this.hButtonMenuToolsText) ? "Show" : "Hide", this.hButtonMenuToolsH )
-		this.Canvas.Control( (MouseCtrl = this.hButtonMenu4Text) ? "Show" : "Hide", this.hButtonMenu4H )
-	}
+				MouseGetPos,,,, MouseCtrl, 2
 
-	WM_LBUTTONDOWN(MouseCtrl) {
-		If (MouseCtrl = this.hTitleHeader || MouseCtrl = this.hTitle) {
-			PostMessage, 0xA1, 2
-		}
-
-		this.Canvas.Control( (MouseCtrl = this.hButtonMinimizeH) ? "Show" : "Hide", this.hButtonMinimizeP )
-		this.Canvas.Control( (MouseCtrl = this.hButtonMaximizeH) ? "Show" : "Hide", this.hButtonMaximizeP )
-		this.Canvas.Control( (MouseCtrl = this.hButtonRestoreH) ? "Show" : "Hide", this.hButtonRestoreP )
-		this.Canvas.Control( (MouseCtrl = this.hButtonCloseH) ? "Show" : "Hide", this.hButtonCloseP )
-	}
-
-	WM_LBUTTONUP(MouseCtrl) {
-		If (MouseCtrl = this.hButtonMinimizeP) {
-			WinMinimize
-		} Else If (MouseCtrl = this.hButtonMaximizeP || MouseCtrl = this.hButtonRestoreP) {
-			WinGet, MinMaxStatus, MinMax
-
-			If (MinMaxStatus = 1) {
-				WinRestore
-				GuiControl, Hide, % this.hButtonRestoreN
-			} Else {
-				WinMaximize
-				GuiControl, Show, % this.hButtonRestoreN
+				If (Msg = 0x200)
+					Return this.WM_MOUSEMOVE(self, MouseCtrl)
+				Else If (Msg = 0x201)
+					Return this.WM_LBUTTONDOWN(self, MouseCtrl)
+				Else If (Msg = 0x202)
+					Return this.WM_LBUTTONUP(self, MouseCtrl)
+				Else If (Msg = 0x2A3)
+					Return this.WM_MOUSELEAVE(self)
 			}
-		} Else If (MouseCtrl = this.hButtonCloseP) {
-			this.GuiClose()
-		} Else If (MouseCtrl = this.hButtonMenu1Text) {
-			ControlGetPos, ctlX, ctlY, ctlW, ctlH, , % "ahk_id " this.hButtonMenu1Text
-			Menu, OW_1, Show, %ctlX%, % ctlY + ctlH
-		} Else If (MouseCtrl = this.hButtonMenu2Text) {
-			ControlGetPos, ctlX, ctlY, ctlW, ctlH, , % "ahk_id " this.hButtonMenu2Text
-			Menu, OW_2, Show, %ctlX%, % ctlY + ctlH
-		} Else If (MouseCtrl = this.hButtonMenu3Text) {
-			ControlGetPos, ctlX, ctlY, ctlW, ctlH, , % "ahk_id " this.hButtonMenu3Text
-			Menu, OW_3, Show, %ctlX%, % ctlY + ctlH
-		} Else If (MouseCtrl = this.hButtonMenu4Text) {
-			ControlGetPos, ctlX, ctlY, ctlW, ctlH, , % "ahk_id " this.hButtonMenu4Text
-			Menu, OW_4, Show, %ctlX%, % ctlY + ctlH
 		}
-		; } Else If (MouseCtrl = this.hButtonMenu4Text) {
-		; 	ControlGetPos, ctlX, ctlY, ctlW, ctlH, , % "ahk_id " this.hButtonMenu4Text
-		; 	Menu, Help_Menu, Show, %ctlX%, % ctlY + ctlH
 
-		this.Canvas.Control("Hide", this.hButtonMinimizeP)
-		this.Canvas.Control("Hide", this.hButtonMaximizeP)
-		this.Canvas.Control("Hide", this.hButtonRestoreP)
-		this.Canvas.Control("Hide", this.hButtonCloseP)
-		this.Canvas.Control("Hide", this.hButtonMenu1H)
-		this.Canvas.Control("Hide", this.hButtonMenu2H)
-		this.Canvas.Control("Hide", this.hButtonMenu3H)
-		this.Canvas.Control("Hide", this.hButtonMenu4H)
-		; this.Canvas.Control("Hide", this.hButtonMenu4H)
-	}
+		WM_MOUSEMOVE(self, MouseCtrl) {
+			self.Canvas.Control( (MouseCtrl = self.hButtonMinimizeN || MouseCtrl = self.hButtonMinimizeH) ? "Show" : "Hide", self.hButtonMinimizeH )
+			, self.Canvas.Control( (MouseCtrl = self.hButtonMaximizeN || MouseCtrl = self.hButtonMaximizeH) ? "Show" : "Hide", self.hButtonMaximizeH )
+			, self.Canvas.Control( (MouseCtrl = self.hButtonRestoreN || MouseCtrl = self.hButtonRestoreH) ? "Show" : "Hide", self.hButtonRestoreH )
+			, self.Canvas.Control( (MouseCtrl = self.hButtonCloseN || MouseCtrl = self.hButtonCloseH) ? "Show" : "Hide", self.hButtonCloseH )
+			, self.Canvas.Control( (MouseCtrl = self.hButtonMenu1Text) ? "Show" : "Hide", self.hButtonMenu1H )
+			, self.Canvas.Control( (MouseCtrl = self.hButtonMenu2Text) ? "Show" : "Hide", self.hButtonMenu2H )
+			, self.Canvas.Control( (MouseCtrl = self.hButtonMenu3Text) ? "Show" : "Hide", self.hButtonMenu3H )
+			, self.Canvas.Control( (MouseCtrl = self.hButtonMenuToolsText) ? "Show" : "Hide", self.hButtonMenuToolsH )
+			, self.Canvas.Control( (MouseCtrl = self.hButtonMenu4Text) ? "Show" : "Hide", self.hButtonMenu4H )
+		}
 
-	WM_MOUSELEAVE() {
-		this.Canvas.Control("Hide", this.hButtonMinimizeH)
-		this.Canvas.Control("Hide", this.hButtonMaximizeH)
-		this.Canvas.Control("Hide", this.hButtonRestoreH)
-		this.Canvas.Control("Hide", this.hButtonCloseH)
-		this.Canvas.Control("Hide", this.hButtonMinimizeP)
-		this.Canvas.Control("Hide", this.hButtonMaximizeP)
-		this.Canvas.Control("Hide", this.hButtonRestoreP)
-		this.Canvas.Control("Hide", this.hButtonCloseP)
-		this.Canvas.Control("Hide", this.hButtonMenu1H)
-		this.Canvas.Control("Hide", this.hButtonMenu2H)
-		this.Canvas.Control("Hide", this.hButtonMenu3H)
-		this.Canvas.Control("Hide", this.hButtonMenu4H)
-		;this.Canvas.Control("Hide", this.hButtonMenuToolsH)
-	}
+		WM_LBUTTONDOWN(self, MouseCtrl) {
+			If (MouseCtrl = self.hTitleHeader || MouseCtrl = self.hTitle) {
+				PostMessage, 0xA1, 2
+			}
+			self.Canvas.Control( (MouseCtrl = self.hButtonMinimizeH) ? "Show" : "Hide", self.hButtonMinimizeP )
+			, self.Canvas.Control( (MouseCtrl = self.hButtonMaximizeH) ? "Show" : "Hide", self.hButtonMaximizeP )
+			, self.Canvas.Control( (MouseCtrl = self.hButtonRestoreH) ? "Show" : "Hide", self.hButtonRestoreP )
+			, self.Canvas.Control( (MouseCtrl = self.hButtonCloseH) ? "Show" : "Hide", self.hButtonCloseP )
+		}
+
+		WM_LBUTTONUP(self, MouseCtrl) {
+			If (MouseCtrl = self.hButtonMinimizeP) {
+				WinMinimize
+			} Else If (MouseCtrl = self.hButtonMaximizeP || MouseCtrl = self.hButtonRestoreP) {
+				WinGet, MinMaxStatus, MinMax
+
+				If (MinMaxStatus = 1) {
+					WinRestore
+					GuiControl, Hide, % self.hButtonRestoreN
+				} Else {
+					WinMaximize
+					GuiControl, Show, % self.hButtonRestoreN
+				}
+			} Else If (MouseCtrl = self.hButtonCloseP) {
+				self.GuiClose()
+			} Else If (MouseCtrl = self.hButtonMenu1Text) {
+				ControlGetPos, ctlX, ctlY, ctlW, ctlH, , % "ahk_id " self.hButtonMenu1Text
+				Menu, OW_1, Show, %ctlX%, % ctlY + ctlH
+			} Else If (MouseCtrl = self.hButtonMenu2Text) {
+				ControlGetPos, ctlX, ctlY, ctlW, ctlH, , % "ahk_id " self.hButtonMenu2Text
+				Menu, OW_2, Show, %ctlX%, % ctlY + ctlH
+			} Else If (MouseCtrl = self.hButtonMenu3Text) {
+				ControlGetPos, ctlX, ctlY, ctlW, ctlH, , % "ahk_id " self.hButtonMenu3Text
+				Menu, OW_3, Show, %ctlX%, % ctlY + ctlH
+			} Else If (MouseCtrl = self.hButtonMenu4Text) {
+				ControlGetPos, ctlX, ctlY, ctlW, ctlH, , % "ahk_id " self.hButtonMenu4Text
+				Menu, OW_4, Show, %ctlX%, % ctlY + ctlH
+			}
+			; } Else If (MouseCtrl = this.hButtonMenu4Text) {
+			; 	ControlGetPos, ctlX, ctlY, ctlW, ctlH, , % "ahk_id " this.hButtonMenu4Text
+			; 	Menu, Help_Menu, Show, %ctlX%, % ctlY + ctlH
+
+			; static Handles := ["hButtonMinimizeP", "hButtonMaximizeP", "hButtonRestoreP", "hButtonCloseP"
+			; , "hButtonMenu1H", "hButtonMenu2H", "hButtonMenu3H", "hButtonMenu4H"]
+
+			; For Key, Value in Handles
+			; 	self.Canvas.Control("Hide", self.Value)
+			self.Canvas.Control("Hide", self.hButtonMinimizeP)
+			, self.Canvas.Control("Hide", self.hButtonMaximizeP)
+			, self.Canvas.Control("Hide", self.hButtonRestoreP)
+			, self.Canvas.Control("Hide", self.hButtonCloseP)
+			, self.Canvas.Control("Hide", self.hButtonMenu1H)
+			, self.Canvas.Control("Hide", self.hButtonMenu2H)
+			, self.Canvas.Control("Hide", self.hButtonMenu3H)
+			, self.Canvas.Control("Hide", self.hButtonMenu4H)
+			; this.Canvas.Control("Hide", this.hButtonMenu4H)
+		}
+
+		WM_MOUSELEAVE(self) {
+			static Handles := ["hButtonMinimizeH", "hButtonMaximizeH", "hButtonRestoreH", "hButtonCloseH"
+			, "hButtonMinimizeP", "hButtonMaximizeP", "hButtonRestoreP", "hButtonCloseP"
+			, "hButtonMenu1H", "hButtonMenu2H", "hButtonMenu3H", "hButtonMenu4H"]
+
+			For Key, Value in Handles
+				self.Canvas.Control("Hide", self.Value)
+			; self.Canvas.Control("Hide", self.hButtonMinimizeH)
+			; self.Canvas.Control("Hide", self.hButtonMaximizeH)
+			; self.Canvas.Control("Hide", self.hButtonRestoreH)
+			; self.Canvas.Control("Hide", self.hButtonCloseH)
+			; self.Canvas.Control("Hide", self.hButtonMinimizeP)
+			; self.Canvas.Control("Hide", self.hButtonMaximizeP)
+			; self.Canvas.Control("Hide", self.hButtonRestoreP)
+			; self.Canvas.Control("Hide", self.hButtonCloseP)
+			; self.Canvas.Control("Hide", self.hButtonMenu1H)
+			; self.Canvas.Control("Hide", self.hButtonMenu2H)
+			; self.Canvas.Control("Hide", self.hButtonMenu3H)
+			; self.Canvas.Control("Hide", self.hButtonMenu4H)
+			;this.Canvas.Control("Hide", this.hButtonMenuToolsH)
+		}
+		}
 }
 
 
@@ -655,6 +773,7 @@
 #Include %A_LineFile%\..\3rd-party\Class hHook.ahk
 #Include %A_LineFile%\..\3rd-party\Class PureNotify.ahk
 #Include %A_LineFile%\..\3rd-party\Class GUI.ahk
+#Include %A_LineFile%\..\3rd-party\Class MenuBar.ahk
 #Include %A_LineFile%\..\3rd-party\Class WinEvents.ahk
 #Include %A_LineFile%\..\3rd-party\Class HotKey.ahk
 ;#Include %A_LineFile%\..\3rd-party\Class DynaScript.ahk
@@ -665,5 +784,5 @@
 ; #Include %A_LineFile%\..\3rd-party\Func CreateGUID.ahk
 ;#Include %A_LineFile%\..\3rd-party\Class Subprocess.ahk
 ;#Include %A_LineFile%\..\3rd-party\Class QuasiThread.ahk
-;#Include %A_LineFile%\..\3rd-party\Func NET Framework Interop.ahk
+#Include %A_LineFile%\..\3rd-party\Func NET Framework Interop.ahk
 ;#Include %A_LineFile%\..\3rd-party\Func AddToolTip.ahk

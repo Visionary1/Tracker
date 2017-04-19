@@ -4,22 +4,21 @@
 		this.Mouse := []
 		;this.Mouse.Move := DynaCall("mouse_event", ["uiiiuii", 2, 3], 1, _x := 0, _y := 0, 0, 0)
 		;DllCall("SendInput", "UInt", 1, "Ptr", &MOUSEINPUT, "Int", 28) ;superceded by SendInput
-		this.Mouse.Move := DynaCall("SendInput", ["uiti", 2], 1, _lpinput := 0, 28)
+		;this.Mouse.Move := DynaCall("SendInput", ["uiti", 2], 1, _lpinput := 0, 28)
 		this.Mouse.Speed := new SetMouseSpeed(10)
 
 		; reserved for future use
 		; GetClientRect(WinExist("오버워치"),(rc:=Struct("Int left,top,right,bottom"))[])
 		; TaskDialog("'OverWatch' detected", rc.right "x" rc.bottom, "Tracker", 0x1, 0xFFFD)
 
-		this.offset := {modifier: 0.3712
-			, x: 45 - A_ScreenWidth / 2 ;Round(0.0234375*A_ScreenWidth - A_ScreenWidth/2) ; 45 - 
-			, y: 70 - A_ScreenHeight / 2 ;Round(0.06481481481*A_ScreenHeight - A_ScreenHeight/2) ; 70 - 
+		this.offset := {x: Round(45 - A_ScreenWidth / 2) ;Round(0.0234375*A_ScreenWidth - A_ScreenWidth/2) ; 45 - 
+			, y: Round(70 - A_ScreenHeight / 2) ;Round(0.06481481481*A_ScreenHeight - A_ScreenHeight/2) ; 70 - 
 			, plus: {l: 0, r: 0}} ;Round(-0.43518518519 * A_ScreenHeight)} ;(85 + ya * 5) - A_ScreenHeight/2}
 
-		this.X1 := X1 ? X1 : Round(A_ScreenWidth * 0.3) ;A_ScreenWidth/2 - A_ScreenWidth/5
-		this.Y1 := Round(A_ScreenHeight * 0.25) ;A_ScreenHeight/2 - A_ScreenHeight/4
-		this.X2 := X2 ? X2 : Round(A_ScreenWidth *0.7) ;A_ScreenWidth/2 + A_ScreenWidth/5
-		this.Y2 := Round(A_ScreenHeight * 0.75) ;A_ScreenHeight/2 + A_ScreenHeight/4
+		this.X1 := X1 ? X1 : Round(A_ScreenWidth/2 - A_ScreenWidth/6)
+		this.Y1 := Round(A_ScreenHeight/2 - A_ScreenHeight/5)
+		this.X2 := X2 ? X2 : Round(A_ScreenWidth/2 + A_ScreenWidth/6)
+		this.Y2 := Round(A_ScreenHeight/2 + A_ScreenHeight/5)
 		this.ColorID := 0xFF0013
 		this.ColorVariation := 0
 	}
@@ -35,6 +34,8 @@
 	Class Calculate extends Public
 	{
 		Call(self, Sensitivity, AntiShake, Humanizer) {
+
+			;ToolTip, % Sensitivity "`n" AntiShake
 
 			If !WinActive("오버워치")
 				Return
@@ -64,7 +65,7 @@
 		}
 
 		AntiShake(delta, ByRef x, ByRef y) {
-			static block := {x: 5, y: 5}
+			static block := {x: 10, y: 5}
 
 			If ( delta.x <= block.x )
 				x := 0
@@ -73,32 +74,18 @@
 		}
 
 		Humanizer(self, delta, Sensitivity, x, y) {
-
-			;Return self.Mouse.Move.(Round(x), Round(y))
-			;this.MoveMouse(self, x, y)
-			; static limit := {x: 140, y: 120, times: 6}
-			If (delta.x < 150)
-				 x := (x * (10 / Sensitivity)) / 5 ;x := x * 0.3712 * Sensitivity
+			;ToolTip, % Round(delta.x) "`n" delta.y
+			If (delta.x < 400)
+				 x := (x * (10 / Sensitivity)) / 6 ;x := x * 0.3712 * Sensitivity
 			Else
-				x := (x * (10 / Sensitivity)) / 4 ;x := x * 0.5 * Sensitivity
+				x := (x * (10 / Sensitivity)) / 5 ;x := x * 0.5 * Sensitivity
 
-			If (delta.y < 80)
-				y := (y * (10 / Sensitivity)) / 5  ;y := y * 0.3712 * Sensitivity
+			If (delta.y < 200)
+				y := (y * (10 / Sensitivity)) / 6  ;y := y * 0.3712 * Sensitivity
 			Else
-				y := (y * (10 / Sensitivity)) / 4
-				;y := y * 0.5 * Sensitivity
+				y := (y * (10 / Sensitivity)) / 5
 
 			Return this.MoveMouse(self, x, y)
-			; If (delta.x <= limit.x) && (delta.y <= limit.y)
-			; 	Return this.MoveMouse(self, x * self.offset.modifier, y * self.offset.modifier)
-
-			; Loop, % limit.times
-			; {
-			; 	this.MoveMouse(self, x/limit.times, y/limit.times)
-			; 	Sleep, 1
-			; }
-
-			; Sleep, 5
 		}
 
 		MoveMouse(self, x, y) {
@@ -114,9 +101,9 @@
 			VarSetCapacity(MOUSEINPUT, 28, 0)
 			, NumPut(Round(x), MOUSEINPUT, 4, "Int"), NumPut(Round(y), MOUSEINPUT, 8, "Int")
 			, NumPut(0x0001, MOUSEINPUT, 16, "UInt")
+			, DllCall("SendInput", "UInt", 1, "Ptr", &MOUSEINPUT, "Int", 28)
 
-			Return self.Mouse.Move[&MOUSEINPUT]
-			;DllCall("SendInput", "UInt", 1, "Ptr", &MOUSEINPUT, "Int", 28)
+			;Return self.Mouse.Move[&MOUSEINPUT]
 			;Return self.Mouse.Move.(1, Round(x), Round(y))
 		}
 	}

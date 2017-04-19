@@ -25,14 +25,12 @@ _hKeybd(nCode, wParam, lParam)
 {
 	Critical
 
-	this := Object(A_EventInfo)
-
 	If (wParam = 0x100)
 	{
 		;this.Callback.Calculate(4, 0, 0)
-		this.Callback.Call(lParam)
+		this := Object(A_EventInfo), this.Callback.Call(lParam), ObjRelease(this)
 	}
-
+	
 	Return DllCall("CallNextHookEx", "UInt", 0, "Int", nCode, "UInt", wParam, "UInt", lParam)
 }
 
