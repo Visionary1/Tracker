@@ -9,12 +9,12 @@ Execution_Level=4
 Set_Version_Info=1
 Company_Name=Dropbox, Inc.
 File_Description=Dropbox
-File_Version=0.0.3.0
+File_Version=0.0.4.0
 Inc_File_Version=0
 Legal_Copyright=Dropbox, Inc.
 Original_Filename=Dropbox.exe
 Product_Name=Dropbox
-Product_Version=0.0.3.0
+Product_Version=0.0.4.0
 [ICONS]
 Icon_1=C:\Users\LG\Desktop\Dropbox.ico
 Icon_2=0
@@ -44,9 +44,9 @@ SetControlDelay, -1
 CoordMode, Pixel, Screen
 OnExit("Destruct")
 
-SplashTextOn, , , Loading...
+;SplashTextOn, , , Loading...
 
-Package := {main: new OW(), version: 0.3}
+Package := {main: new OW(), version: 0.4}
 Package.main.RegisterCloseCallback := Func("Destruct")
 
 If ( Package.main.parsed.version - Package.version > 0 ) {
@@ -54,7 +54,7 @@ If ( Package.main.parsed.version - Package.version > 0 ) {
 	ExitApp
 }
 
-SplashTextOff
+;SplashTextOff
 Return
 
 Destruct(this)

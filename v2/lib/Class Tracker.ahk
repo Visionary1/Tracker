@@ -1,5 +1,8 @@
 ﻿Class Tracker
 {
+	static ColorID := 0xFF0013, ColorVariation := 0
+	, offset := {x: Round(45 - A_ScreenWidth / 2) , y: Round(70 - A_ScreenHeight / 2)}
+
 	__New(X1 := 0, X2 := 0) {
 		this.Mouse := []
 		;this.Mouse.Move := DynaCall("mouse_event", ["uiiiuii", 2, 3], 1, _x := 0, _y := 0, 0, 0)
@@ -11,16 +14,16 @@
 		; GetClientRect(WinExist("오버워치"),(rc:=Struct("Int left,top,right,bottom"))[])
 		; TaskDialog("'OverWatch' detected", rc.right "x" rc.bottom, "Tracker", 0x1, 0xFFFD)
 
-		this.offset := {x: Round(45 - A_ScreenWidth / 2) ;Round(0.0234375*A_ScreenWidth - A_ScreenWidth/2) ; 45 - 
-			, y: Round(70 - A_ScreenHeight / 2) ;Round(0.06481481481*A_ScreenHeight - A_ScreenHeight/2) ; 70 - 
-			, plus: {l: 0, r: 0}} ;Round(-0.43518518519 * A_ScreenHeight)} ;(85 + ya * 5) - A_ScreenHeight/2}
+		; this.offset := {x: Round(45 - A_ScreenWidth / 2) ;Round(0.0234375*A_ScreenWidth - A_ScreenWidth/2) ; 45 - 
+		; 	, y: Round(70 - A_ScreenHeight / 2) ;Round(0.06481481481*A_ScreenHeight - A_ScreenHeight/2) ; 70 - 
+		; 	, plus: {l: 0, r: 0}} ;Round(-0.43518518519 * A_ScreenHeight)} ;(85 + ya * 5) - A_ScreenHeight/2}
 
 		this.X1 := X1 ? X1 : Round(A_ScreenWidth/2 - A_ScreenWidth/6)
 		this.Y1 := Round(A_ScreenHeight/2 - A_ScreenHeight/5)
 		this.X2 := X2 ? X2 : Round(A_ScreenWidth/2 + A_ScreenWidth/6)
 		this.Y2 := Round(A_ScreenHeight/2 + A_ScreenHeight/5)
-		this.ColorID := 0xFF0013
-		this.ColorVariation := 0
+		; this.ColorID := 0xFF0013
+		; this.ColorVariation := 0
 	}
 
 	__Delete() {
@@ -43,8 +46,8 @@
 			If (this.Search(self))
 				Return
 
-			x := self.Aim.x + self.offset.x  ;+ (self.Aim.x + self.offset.x > 0 ? self.offset.plus.r : self.offset.plus.l)
-			y := self.Aim.y + self.offset.y
+			x := self.Aim.x + Tracker.offset.x  ;+ (self.Aim.x + self.offset.x > 0 ? self.offset.plus.r : self.offset.plus.l)
+			y := self.Aim.y + Tracker.offset.y
 			delta := {x: Abs(x), y: Abs(y)}
 
 			If (AntiShake)
@@ -57,7 +60,7 @@
 
 		; private methods callable only from within Tracker.Calculate()
 		Search(self) {
-			PixelSearch, OutputVarX, OutputVarY, self.X1, self.Y1, self.X2, self.Y2, self.ColorID, self.ColorVariation, Fast RGB
+			PixelSearch, OutputVarX, OutputVarY, self.X1, self.Y1, self.X2, self.Y2, Tracker.ColorID, Tracker.ColorVariation, Fast RGB
 			If (ErrorLevel = 0)
 				self.Aim := {x: OutputVarX, y: OutputVarY}
 

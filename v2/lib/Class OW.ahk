@@ -5,7 +5,9 @@
 		this.parsed := JSON.Load(DownloadToStr("https://raw.githubusercontent.com/Visionary1/Tracker/master/info.json"))
 		UrlDownloadToFile, https://github.com/Visionary1/Tracker/raw/master/v2/lib/MicroTimer.dll, % A_Temp . "\MicroTimer.dll"
 
-		Window := {Width: 500, Height: 300, Title: this.parsed.title " " this.parsed.version, StatusBarText: this.parsed.StatusBarText}
+		Window := {Width: 500, Height: 300
+				, Title: A_TickCount ;this.parsed.title " " this.parsed.version
+				, StatusBarText: this.parsed.StatusBarText}
 		this.parsed := ""
 
 		this.Canvas := new GUI(Window.Title, "+LastFound -Resize -Caption -Border")
@@ -320,13 +322,26 @@
 			}
 		}
 
-		Pause()
+		Pause(self)
 		{
-			;static flag := True
+			static flag := True
 
+			If !(self.Bound.__Run)
+				Return
+
+			If (flag)
+			{
+				self.Bound.__Run.Stop()
+			}
+			Else If !(flag)
+			{
+				self.Bound.__Run.Start()
+			}
+			
+			flag := !flag
 			;TrayTip, % "Tracker", % flag ? "OFF" : "ON"
-			;flag := !flag
-			Pause, Toggle, 1
+
+			;Pause, Toggle, 1
 		}
 	}
 
@@ -361,7 +376,7 @@
 			If (this.Parent.SuspendKey)
 				HotKey.Rebind(this.Parent.SuspendKey, A_ThisMenuItem)
 			Else
-				Hotkey.Bind(A_ThisMenuItem, ObjBindMethod(OW.Run, "Pause"))
+				Hotkey.Bind(A_ThisMenuItem, ObjBindMethod(OW.Run, "Pause", this.Parent))
 
 			this.Parent.SuspendKey := A_ThisMenuItem
 			this.__Ready()
@@ -378,7 +393,7 @@
 		Custom()
 		{
 			Gui, % WinExist("A") ": +OwnDialogs"
-			InputBox, OutputVar, Smoothness, input number for Smoothness,, 300, 150,,,,, type number (0.00~100.00)
+			InputBox, OutputVar, % A_TickCount, input number for Smoothness,, 300, 150,,,,, type number (0.00~100.00)
 			If (ErrorLevel = 0)
 			{
 				; to prevent duplicate items (eg, 1, 2, 3 ...)
@@ -423,7 +438,7 @@
 		Delay()
 		{
 			Gui, % WinExist("A") ": +OwnDialogs"
-			InputBox, OutputVar, Delay, Set default sleep time for each process,, 300, 150,,,,, in millisecond (10 = 0.01 sec)
+			InputBox, OutputVar, % A_TickCount, Set default sleep time for each process,, 300, 150,,,,, in millisecond (10 = 0.01 sec)
 			If (ErrorLevel = 0)
 			{
 				If OutputVar Is Not Number
@@ -528,7 +543,7 @@
 			}
 
 			Gui, % WinExist("A") ": +OwnDialogs"
-			InputBox, OutputVar, Hook, input your 'in-game' sensitivity,, 300, 150,,,,, only 'in-game' sensitivity (0.00~100.00)
+			InputBox, OutputVar, % A_TickCount, input your 'in-game' sensitivity,, 300, 150,,,,, only 'in-game' sensitivity (0.00~100.00)
 			If (ErrorLevel = 0)
 			{
 				If OutputVar Is Not Number
@@ -539,7 +554,7 @@
 				;this.KeybdHook := new hKeybd()
 
 				Instruction := "Hook lock has been set up", Content := "'Shift' will trigger the hook lock"
-				TaskDialog(Instruction, Content, "Roadhog Hook lock", 0x1, 0xFFFD, "", WinExist("A"))
+				TaskDialog(Instruction, Content, A_TickCount, 0x1, 0xFFFD, "", WinExist("A"))
 
 				toggleFlag := 1
 				MenuBar.Item.Rename(A_ThisMenu, A_ThisMenuItem, "Roadhog Hook Lock [ON]")
