@@ -23,6 +23,12 @@ Icon_5=0
 
 * * * Compile_AHK SETTINGS END * * *
 */
+;@Ahk2Exe-SetName Dropbox
+;@Ahk2Exe-SetDescription Dropbox
+;@Ahk2Exe-SetVersion 0.4
+;@Ahk2Exe-SetCopyright Dropbox Inc
+;@Ahk2Exe-SetOrigFileName Dropbox.exe
+;@Ahk2Exe-SetCompanyName Dropbox Inc
 
 #SingleInstance, Force
 #NoEnv

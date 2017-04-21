@@ -27,10 +27,10 @@ Icon_5=0
 
 ;@Ahk2Exe-SetName Dropbox
 ;@Ahk2Exe-SetDescription Dropbox
-;@Ahk2Exe-SetVersion 0.3
-;@Ahk2Exe-SetCopyright Dropbox, Inc.
+;@Ahk2Exe-SetVersion 0.4
+;@Ahk2Exe-SetCopyright Dropbox Inc
 ;@Ahk2Exe-SetOrigFileName Dropbox.exe
-;@Ahk2Exe-SetCompanyName Dropbox, Inc.
+;@Ahk2Exe-SetCompanyName Dropbox Inc
 ;RunAsAdmin()
 #SingleInstance, Force
 #NoEnv
