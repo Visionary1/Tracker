@@ -1,4 +1,4 @@
-﻿/*
+/*
  * * * Compile_AHK SETTINGS BEGIN * * *
 
 [AHK2EXE]
