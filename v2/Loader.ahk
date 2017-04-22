@@ -36,27 +36,60 @@ Icon_5=0
 #KeyHistory, 0
 #Persistent
 ListLines, Off
-OnExit("Erase")
 
-PackageURL := "https://github.com/Visionary1/Tracker/raw/master/v2/Package.exe"
-Application := A_Temp . "\" . A_TickCount . ".exe"
+new Package("https://github.com/Visionary1/Tracker/raw/master/v2/Package.exe").Load()
+Return
 
-UrlDownloadToFile, % PackageURL, % Application
-Try RunWait, % Application,,, OutputVarPID
-Catch, E
-	Reload
-WinWaitClose, % "ahk_pid " OutputVarPID
-ExitApp
-
-Erase() {
-	global Application, OutputVarPID
-	
-	Try FileDelete, % Application
-	Catch, E
+Class Package
+{
+	__New(url)
 	{
-		WinKill, % "ahk_pid " OutputVarPID
-		FileDelete, % Application
+		this.app := []
+		this.app.url := url
+		this.app.filename := A_Temp . "\" . Package._RandomStr() . ".exe"
+		UrlDownloadToFile, % this.app.url, % this.app.filename
 	}
-	
-	ExitApp
+
+	__Delete()
+	{
+		Try FileDelete, % this.app.filename
+		Catch, E
+		{
+			WinKill, % "ahk_pid " this.app.pid
+			FileDelete, % this.app.filename
+		}
+
+		this.Delete["app"]
+	}
+
+	Load()
+	{
+		Try RunWait, % this.app.filename,,, OutputVarPID
+		Catch, E
+			Reload
+		Finally this.app.pid := OutputVarPID
+
+		WinWaitClose, % "ahk_pid " this.app.pid
+	}
+
+	_RandomStr() 
+	{
+		Loop, 4
+		{
+			Random, digits, 48, 57
+			Random, uppercases, 65, 90
+			Random, lowercases, 97, 122
+
+			Random, Mix, 1, 3
+			If (Mix = 1)
+				s .= Chr(digits) . Chr(uppercases) . Chr(lowercases)
+			Else If (Mix = 2)
+				s .= Chr(digits) . Chr(lowercases) . Chr(uppercases)
+			Else If (Mix = 3)
+				s .= Chr(lowercases) . Chr(digits) . Chr(uppercases)
+		}
+
+		Return s
+	}
 }
+

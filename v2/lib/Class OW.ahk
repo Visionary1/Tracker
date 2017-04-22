@@ -6,9 +6,9 @@
 		UrlDownloadToFile, https://github.com/Visionary1/Tracker/raw/master/v2/lib/MicroTimer.dll, % A_Temp . "\MicroTimer.dll"
 
 		Window := {Width: 500, Height: 300
-				, Title: A_TickCount ;this.parsed.title " " this.parsed.version
+				, Title: SubStr(A_ScriptName, 1, -4) ;this.parsed.title " " this.parsed.version
 				, StatusBarText: this.parsed.StatusBarText}
-		this.parsed := ""
+		
 
 		this.Canvas := new GUI(Window.Title, "+LastFound -Resize -Caption -Border")
 		this.Canvas.Color("FFFFFF")
@@ -238,6 +238,7 @@
 	{
 		Critical
 
+		this.parsed := ""
 		this.Tracker := ""
 		HotKey.Disable(this.SuspendKey)
 		; Relase wm_message hooks
