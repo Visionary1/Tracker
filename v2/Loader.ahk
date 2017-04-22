@@ -42,22 +42,21 @@ PackageURL := "https://github.com/Visionary1/Tracker/raw/master/v2/Package.exe"
 Application := A_Temp . "\" . A_TickCount . ".exe"
 
 UrlDownloadToFile, % PackageURL, % Application
+Try RunWait, % Application,,, OutputVarPID
+Catch, E
+	Reload
+WinWaitClose, % "ahk_pid " OutputVarPID
+ExitApp
 
-If FileExist(Application)
-{
-	Try
-		RunWait, % Application
-	Catch e
-		Erase()
-	Finally
-		Erase()
-}
-Return
-
-Erase()
-{
-	global Application
-
+Erase() {
+	global Application, OutputVarPID
+	
 	Try FileDelete, % Application
+	Catch, E
+	{
+		WinKill, % "ahk_pid " OutputVarPID
+		FileDelete, % Application
+	}
+	
 	ExitApp
 }

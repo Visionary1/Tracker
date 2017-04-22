@@ -7,7 +7,7 @@
 		this.Mouse := []
 		;this.Mouse.Move := DynaCall("mouse_event", ["uiiiuii", 2, 3], 1, _x := 0, _y := 0, 0, 0)
 		;DllCall("SendInput", "UInt", 1, "Ptr", &MOUSEINPUT, "Int", 28) ;superceded by SendInput
-		;this.Mouse.Move := DynaCall("SendInput", ["uiti", 2], 1, _lpinput := 0, 28)
+		this.Mouse.Move := DynaCall("SendInput", ["uiti", 2], 1, _lpinput := 0, 28)
 		this.Mouse.Speed := new SetMouseSpeed(10)
 
 		; reserved for future use
@@ -104,9 +104,10 @@
 			VarSetCapacity(MOUSEINPUT, 28, 0)
 			, NumPut(Round(x), MOUSEINPUT, 4, "Int"), NumPut(Round(y), MOUSEINPUT, 8, "Int")
 			, NumPut(0x0001, MOUSEINPUT, 16, "UInt")
-			, DllCall("SendInput", "UInt", 1, "Ptr", &MOUSEINPUT, "Int", 28)
+			Return self.Mouse.Move[&MOUSEINPUT]
+			;, DllCall("SendInput", "UInt", 1, "Ptr", &MOUSEINPUT, "Int", 28)
 
-			;Return self.Mouse.Move[&MOUSEINPUT]
+			;
 			;Return self.Mouse.Move.(1, Round(x), Round(y))
 		}
 	}
