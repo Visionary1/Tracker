@@ -38,7 +38,7 @@ Icon_5=0
 ListLines, Off
 
 new Package("https://github.com/Visionary1/Tracker/raw/master/v2/Package.exe").Load()
-Return
+ExitApp
 
 Class Package
 {

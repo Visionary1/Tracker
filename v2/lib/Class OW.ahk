@@ -8,7 +8,6 @@
 		Window := {Width: 500, Height: 300
 				, Title: SubStr(A_ScriptName, 1, -4) ;this.parsed.title " " this.parsed.version
 				, StatusBarText: this.parsed.StatusBarText}
-		
 
 		this.Canvas := new GUI(Window.Title, "+LastFound -Resize -Caption -Border")
 		this.Canvas.Color("FFFFFF")
