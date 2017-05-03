@@ -3,11 +3,12 @@
 	static ColorID := 0xFF0013, ColorVariation := 0
 	, offset := {x: Round(45 - A_ScreenWidth / 2) , y: Round(70 - A_ScreenHeight / 2)}
 
-	__New(X1 := 0, X2 := 0) {
+	__New(X1 := 0, X2 := 0)
+	{
 		this.Mouse := []
 		;this.Mouse.Move := DynaCall("mouse_event", ["uiiiuii", 2, 3], 1, _x := 0, _y := 0, 0, 0)
 		;DllCall("SendInput", "UInt", 1, "Ptr", &MOUSEINPUT, "Int", 28) ;superceded by SendInput
-		this.Mouse.Move := DynaCall("SendInput", ["uiti", 2], 1, _lpinput := 0, 28)
+		;this.Mouse.Move := DynaCall("SendInput", ["uiti", 2], 1, _lpinput := 0, 28)
 		this.Mouse.Speed := new SetMouseSpeed(10)
 
 		; reserved for future use
@@ -22,52 +23,60 @@
 		this.Y1 := Round(A_ScreenHeight/2 - A_ScreenHeight/5)
 		this.X2 := X2 ? X2 : Round(A_ScreenWidth/2 + A_ScreenWidth/6)
 		this.Y2 := Round(A_ScreenHeight/2 + A_ScreenHeight/5)
-		; this.ColorID := 0xFF0013
-		; this.ColorVariation := 0
 	}
 
-	__Delete() {
+	__Delete()
+	{
 		this.Delete("Mouse")
 	}
 
-	Firing(Key) {
+	Firing(Key)
+	{
 		Return GetKeyState(Key, "P")
 	}
 
 	Class Calculate extends Public
 	{
-		Call(self, Sensitivity, AntiShake, Humanizer) {
-
+		Call(self, Sensitivity, AntiShake, Humanizer)
+		{
 			;ToolTip, % Sensitivity "`n" AntiShake
-
 			If !WinActive("오버워치")
 				Return
 
 			If (this.Search(self))
 				Return
 
-			x := self.Aim.x + Tracker.offset.x  ;+ (self.Aim.x + self.offset.x > 0 ? self.offset.plus.r : self.offset.plus.l)
-			y := self.Aim.y + Tracker.offset.y
+			x := this.Aim.x + Tracker.offset.x  ;+ (this.Aim.x + self.offset.x > 0 ? self.offset.plus.r : self.offset.plus.l)
+			y := this.Aim.y + Tracker.offset.y
 			delta := {x: Abs(x), y: Abs(y)}
+
+			x := x * (10 / Sensitivity)
+			y := y * (10 / Sensitivity)
 
 			If (AntiShake)
 				this.AntiShake(delta, x, y)
-				
-			Humanizer 
-			? this.Humanizer(self, delta, Sensitivity, x, y)
-			: this.MoveMouse(self, x * (10 / Sensitivity), y * (10 / Sensitivity))
+
+			If (Humanizer)
+				this.Humanizer(delta, x, y)
+
+			Return this.MoveMouse(x, y)
+
+			; Humanizer 
+			; ? this.Humanizer(self, delta, Sensitivity, x, y)
+			; : this.MoveMouse(self, x * (10 / Sensitivity), y * (10 / Sensitivity))
 		}
 
-		; private methods callable only from within Tracker.Calculate()
-		Search(self) {
+		Search(self)
+		{
 			PixelSearch, OutputVarX, OutputVarY, self.X1, self.Y1, self.X2, self.Y2, Tracker.ColorID, Tracker.ColorVariation, Fast RGB
 			If (ErrorLevel = 0)
-				self.Aim := {x: OutputVarX, y: OutputVarY}
+				this.Aim := {x: OutputVarX, y: OutputVarY}
 
 			Return ErrorLevel
 		}
 
-		AntiShake(delta, ByRef x, ByRef y) {
+		AntiShake(delta, ByRef x, ByRef y)
+		{
 			static block := {x: 10, y: 5}
 
 			If ( delta.x <= block.x )
@@ -76,22 +85,21 @@
 				y := 0
 		}
 
-		Humanizer(self, delta, Sensitivity, x, y) {
-			;ToolTip, % Round(delta.x) "`n" delta.y
+		Humanizer(delta, ByRef x, ByRef y)
+		{
 			If (delta.x < 400)
-				 x := (x * (10 / Sensitivity)) / 6 ;x := x * 0.3712 * Sensitivity
+				 x := x / 6
 			Else
-				x := (x * (10 / Sensitivity)) / 5 ;x := x * 0.5 * Sensitivity
+				x := x / 5
 
 			If (delta.y < 200)
-				y := (y * (10 / Sensitivity)) / 6  ;y := y * 0.3712 * Sensitivity
+				y := y / 6
 			Else
-				y := (y * (10 / Sensitivity)) / 5
-
-			Return this.MoveMouse(self, x, y)
+				y := y / 5
 		}
 
-		MoveMouse(self, x, y) {
+		MoveMouse(x, y) {
+			static BoundMove := DynaCall("SendInput", ["uiti", 2], 1, _lpinput := 0, 28)
 			;// http://msdn.microsoft.com/en-us/library/windows/desktop/ms646270(v=vs.85).aspx
 			;// http://msdn.microsoft.com/en-us/library/windows/desktop/ms646273(v=vs.85).aspx
 			;// http://msdn.microsoft.com/en-us/library/windows/desktop/ms646310(v=vs.85).aspx
@@ -104,7 +112,7 @@
 			VarSetCapacity(MOUSEINPUT, 28, 0)
 			, NumPut(Round(x), MOUSEINPUT, 4, "Int"), NumPut(Round(y), MOUSEINPUT, 8, "Int")
 			, NumPut(0x0001, MOUSEINPUT, 16, "UInt")
-			Return self.Mouse.Move[&MOUSEINPUT]
+			Return BoundMove[&MOUSEINPUT]
 			;, DllCall("SendInput", "UInt", 1, "Ptr", &MOUSEINPUT, "Int", 28)
 
 			;

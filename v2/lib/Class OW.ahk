@@ -703,7 +703,7 @@
 
 		WM_LBUTTONDOWN(self, MouseCtrl) {
 			If (MouseCtrl = self.hTitleHeader || MouseCtrl = self.hTitle) {
-				PostMessage, 0xA1, 2
+				DllCall("user32.dll\PostMessage", "Ptr", self.Canvas.hwnd, "UInt", 0xA1, "Ptr", 2, "Ptr", 0) ;PostMessage, 0xA1, 2
 			}
 			self.Canvas.Control( (MouseCtrl = self.hButtonMinimizeH) ? "Show" : "Hide", self.hButtonMinimizeP )
 			, self.Canvas.Control( (MouseCtrl = self.hButtonMaximizeH) ? "Show" : "Hide", self.hButtonMaximizeP )
