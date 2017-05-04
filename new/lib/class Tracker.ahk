@@ -137,7 +137,7 @@ class AimLock
 	RoadHog(InGameSens, lParam)
 	{
 		If (NumGet(lParam+0, 0) = 160) ;LShift
-		Return AimLock.Activator.Calculate(InGameSens, 0, 0)
+			Return AimLock.Activator.Calculate(InGameSens, 0, 0)
 	}
 
 	Ana(InGameSens, lParam) ;Work in progress..
@@ -151,6 +151,6 @@ class Private
 	__Call(method, args*)
 	{
 		If IsObject(method) || (method == "")
-		Return method ? this.Call(method, args*) : this.Call(args*)
+			Return method ? this.Call(method, args*) : this.Call(args*)
 	}
 }
