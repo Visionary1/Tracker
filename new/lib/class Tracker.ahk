@@ -34,8 +34,8 @@
 			If (this.Search(self))
 				Return
 
-			x := this.hpbar.x + this.offset.x
-			y := this.hpbar.y + this.offset.y
+			x := this.hpbar.x + self.offset.x
+			y := this.hpbar.y + self.offset.y
 			distance := {x: Abs(x), y: Abs(y)}
 
 			x := x * (10 / Sensitivity)

@@ -337,12 +337,13 @@
 			this.__Parent := &self
 		}
 		
-		Parent[] 
+		Parent[]
 		{
 			get {
 				If (NumGet(this.__Parent) = NumGet(&this)) ; safety check or you can use try/catch/finally
 					Return Object(this.__Parent)
-			}}
+			}
+		}
 		
 		AimKey()
 		{
