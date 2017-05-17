@@ -28,7 +28,7 @@ _hKeybd(nCode, wParam, lParam)
 	If (wParam = 0x100)
 	{
 		;this.Callback.Calculate(4, 0, 0)
-		this := Object(A_EventInfo), this.Callback.Call(lParam), ObjRelease(this)
+		this := Object(A_EventInfo), this.Callback.Call(lParam)
 	}
 	
 	Return DllCall("CallNextHookEx", "UInt", 0, "Int", nCode, "UInt", wParam, "UInt", lParam)

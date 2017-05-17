@@ -8,6 +8,7 @@
 #NoEnv
 #NoTrayIcon
 #KeyHistory, 0
+SetBatchLines, -1
 ListLines, Off
 OnExit("Destruct")
 
@@ -17,8 +18,7 @@ namespace.main := new OW(namespace.json)
 namespace.main.RegisterCloseCallback := Func("Destruct")
 Return
 
-Destruct(self){
-	Try self.GuiClose()
+Destruct(self) {
 	namespace := ""
 	ExitApp
 }

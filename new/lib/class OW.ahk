@@ -14,10 +14,10 @@
 		this.Bound := []
 		this.Bound.OnMessage := ObjBindMethod(OW.OnMessage, "Calls", this)
 		
-		this.AntiShake := True
-		this.Humanizer := True ; for it's still under dev
-		this.Alternative := True ; this is better?
-		this.Delay := 30 ;default delay
+		this.AntiShake := 1		; prevent shakes
+		this.Humanizer := 1 	; default
+		this.Alternative := 1 	; mt seems to work better
+		this.Delay := 30 		; default delay
 		
 		Buttons := new OW.MenuButtons(this)
 		Menus :=
@@ -65,7 +65,7 @@
 		
 		this.Menus := MenuBar.Create(Menus, "OW_")
 		this.Gui.Options("Menu", this.Menu[1])
-		MenuBar.Item.Disable("OW_4", ["Humanizer [ON]", "Alternative Mode [ON]"])
+		MenuBar.Item.Disable("OW_4", ["Humanizer [ON]", "Alternative Mode [ON]", "Roadhog Hook lock [OFF]"])
 		MenuBar.Item.Toggle("OW_4", ["Alternative Mode [ON]", "Humanizer [ON]", "Anti-Shake [ON]", "Set Delay [30]"])
 		MenuBar.Tray.NoStandard()
 		
@@ -223,7 +223,7 @@
 	}
 	
 	GuiClose()
-	{	
+	{
 		this.Bound.HotKey.Delete()
 
 		; Relase wm_message hooks
@@ -232,7 +232,7 @@
 		
 		If (this.Alternative)
 		{
-			this.Bound.Thread.Stop(), this.Bound.Thread := "", this.Bound.mt := "", this.Bound.asm := ""
+			this.Bound.Thread := ""
 		}
 		
 		this.Tracker := ""
@@ -268,15 +268,18 @@
 			
 			If (self.Alternative)
 			{
-				self.Bound.asm := CLR_LoadLibrary(A_Temp . "\MicroTimer.dll")
-				self.Bound.mt := self.Bound.asm.CreateInstance("MicroTimer")
-				self.Bound.Thread := self.Bound.mt.Create(ObjBindMethod(OW.Run, "As_alternative", self), self.Delay)
+				self.Bound.Thread := new Thread(ObjBindMethod(OW.Run, "As_alternative", self), self.Delay)
 				self.Bound.Thread.Start()
 			}
 			else
 			{
 				this.As_normal(self)
 			}
+		}
+
+		Debug(self)
+		{
+			ToolTip, % self.AntiShake "`n" self.Sensitivity "`n" self.AimKey
 		}
 		
 		As_normal(self)
@@ -356,10 +359,10 @@
 		{
 			MenuBar.Item.Toggle(A_ThisMenu, this.Parent.SuspendKey, A_ThisMenuItem)
 
-			If (self.Bound.HotKey)
-				self.Bound.HotKey.Delete()
+			If (this.Parent.Bound.HotKey)
+				this.Parent.Bound.HotKey.Delete()
 
-			self.Bound.HotKey := new HotKey(A_ThisMenuItem, ObjBindMethod(OW.Run, "Pause", this.Parent))
+			this.Parent.Bound.HotKey := new HotKey(A_ThisMenuItem, ObjBindMethod(OW.Run, "Pause", this.Parent))
 			this.Parent.SuspendKey := A_ThisMenuItem
 			this.Initialize()
 		}
@@ -430,8 +433,8 @@
 				
 				If (this.Parent.Alternative) && (this.Parent.Bound.Thread)
 				{
-					this.Parent.Bound.Thread.Stop(), this.Parent.Bound.Thread := ""
-					this.Parent.Bound.Thread := this.Parent.Bound.mt.Create(ObjBindMethod(OW.Run, "As_alternative", this.Parent), this.Parent.Delay)
+					this.Parent.Bound.Thread := ""
+					this.Parent.Bound.Thread := new Thread(ObjBindMethod(OW.Run, "As_alternative", this.Parent), this.Parent.Delay)
 					this.Parent.Bound.Thread.Start()
 				}
 			}
@@ -678,7 +681,8 @@
 }
 
 
-#Include %A_LineFile%\..\Class Tracker.ahk
+#Include %A_LineFile%\..\class Tracker.ahk
+#Include %A_LineFile%\..\class Thread.ahk
 #Include %A_LineFile%\..\3rd-party\Class hHook.ahk
 #Include %A_LineFile%\..\3rd-party\Class PureNotify.ahk
 #Include %A_LineFile%\..\3rd-party\Class GUI.ahk
@@ -688,4 +692,4 @@
 #Include %A_LineFile%\..\3rd-party\Class JSON.ahk
 #Include %A_LineFile%\..\3rd-party\Func DownloadToString.ahk
 #Include %A_LineFile%\..\3rd-party\Class TaskDialog.ahk
-#Include %A_LineFile%\..\3rd-party\Func NET Framework Interop.ahk              
+;#Include %A_LineFile%\..\3rd-party\Func NET Framework Interop.ahk              

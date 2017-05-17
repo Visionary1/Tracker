@@ -2,44 +2,42 @@
 {
 	__New(X1 := 0, X2 := 0)
 	{
-		;this.Mouse.Move := DynaCall("mouse_event", ["uiiiuii", 2, 3], 1, _x := 0, _y := 0, 0, 0)
-		;DllCall("SendInput", "UInt", 1, "Ptr", &MOUSEINPUT, "Int", 28) ;superceded by SendInput
-		this.mouse := {}
-		this.mouse.speed := new Tracker.MouseSpeed(10)
-
+		this.mspeed := new Tracker.MouseSpeed(10)
 		this.X1 := X1 ? X1 : Round(A_ScreenWidth/2 - A_ScreenWidth/6)
 		this.Y1 := Round(A_ScreenHeight/2 - A_ScreenHeight/5)
 		this.X2 := X2 ? X2 : Round(A_ScreenWidth/2 + A_ScreenWidth/6)
 		this.Y2 := Round(A_ScreenHeight/2 + A_ScreenHeight/5)
-		this.offset := {x: Round(0.0234375*A_ScreenWidth - A_ScreenWidth / 2) ;45
-					, y: Round(0.06481481481*A_ScreenHeight - A_ScreenHeight / 2)} ;70
 	}
 
 	__Delete()
 	{
-		this.Delete("mouse")
+		this.mspeed := ""
 	}
 
 	Firing(Key)
 	{
-		Return GetKeyState(Key, "P")
+		static vkc := {LButton: 0x01, RButton: 0x02, MButton: 0x04, CapsLock: 0x14, Ctrl: 0x11, Space: 0x20}
+
+		Return DllCall("GetAsyncKeyState", "Int", vkc[Key])
+		;Return GetKeyState(Key, "P")
 	}
 
 	class Calculate extends Private
 	{
 		Call(self, Sensitivity, AntiShake, Humanizer)
 		{
+			static calibrate := {x: 45, y: 70}
+
 			;ToolTip, % Sensitivity "`n" AntiShake
 
 			If (this.Search(self))
 				Return
 
-			x := this.hpbar.x + self.offset.x
-			y := this.hpbar.y + self.offset.y
-			distance := {x: Abs(x), y: Abs(y)}
-
-			x := x * (10 / Sensitivity)
-			y := y * (10 / Sensitivity)
+			x := this.hpbar.x + calibrate.x
+			, y := this.hpbar.y + calibrate.y
+			, distance := {x: Abs(x), y: Abs(y)}
+			, x := x * (10 / Sensitivity)
+			, y := y * (10 / Sensitivity)
 
 			If (AntiShake)
 				this.AntiShake(distance, x, y)
@@ -92,20 +90,26 @@
 
 		MoveMouse(x, y)
 		{
-			static Exec := DynaCall("SendInput", ["uiti", 2], 1, _lpinput := 0, 28)
-			;// http://msdn.microsoft.com/en-us/library/windows/desktop/ms646270(v=vs.85).aspx
-			;// http://msdn.microsoft.com/en-us/library/windows/desktop/ms646273(v=vs.85).aspx
-			;// http://msdn.microsoft.com/en-us/library/windows/desktop/ms646310(v=vs.85).aspx
-			; // type = 0 (INPUT_MOUSE), ;// mouseData = 0, ;// dwFlags = 1 (MOUSEEVENTF_MOVE), ;// time = 0, ;// dwExtraInfo = 0
-			; VarSetCapacity(MOUSEINPUT, 28, 0), NumPut(0, MOUSEINPUT, 0), NumPut(0, MOUSEINPUT, 12),NumPut(0x0001, MOUSEINPUT, 16, "UInt") 
-			; , NumPut(0, MOUSEINPUT, 20), NumPut(0, MOUSEINPUT, 24)
-			; , NumPut(Round(x), MOUSEINPUT, 4, "Int"), NumPut(Round(y), MOUSEINPUT, 8, "Int")
+			; static Exec := DynaCall("SendInput", ["uiti", 2], 1, _lpinput := 0, 28)
+			; ;// http://msdn.microsoft.com/en-us/library/windows/desktop/ms646270(v=vs.85).aspx
+			; ;// http://msdn.microsoft.com/en-us/library/windows/desktop/ms646273(v=vs.85).aspx
+			; ;// http://msdn.microsoft.com/en-us/library/windows/desktop/ms646310(v=vs.85).aspx
+			; ; // type = 0 (INPUT_MOUSE), ;// mouseData = 0, ;// dwFlags = 1 (MOUSEEVENTF_MOVE), ;// time = 0, ;// dwExtraInfo = 0
+			; ; VarSetCapacity(MOUSEINPUT, 28, 0), NumPut(0, MOUSEINPUT, 0), NumPut(0, MOUSEINPUT, 12),NumPut(0x0001, MOUSEINPUT, 16, "UInt") 
+			; ; , NumPut(0, MOUSEINPUT, 20), NumPut(0, MOUSEINPUT, 24)
+			; ; , NumPut(Round(x), MOUSEINPUT, 4, "Int"), NumPut(Round(y), MOUSEINPUT, 8, "Int")
 
-			VarSetCapacity(MOUSEINPUT, 28, 0)
-			, NumPut(Round(x), MOUSEINPUT, 4, "Int"), NumPut(Round(y), MOUSEINPUT, 8, "Int")
-			, NumPut(0x0001, MOUSEINPUT, 16, "UInt")
-			Return Exec[&MOUSEINPUT]
-			;, DllCall("SendInput", "UInt", 1, "Ptr", &MOUSEINPUT, "Int", 28)
+			; ; VarSetCapacity(MOUSEINPUT, 28, 0)
+			; ; , NumPut(Round(x), MOUSEINPUT, 4, "Int"), NumPut(Round(y), MOUSEINPUT, 8, "Int")
+			; ; , NumPut(0x0001, MOUSEINPUT, 16, "UInt"), DllCall("SendInput", "UInt", 1, "Ptr", &MOUSEINPUT, "Int", 28)
+
+			; VarSetCapacity(MOUSEINPUT, 28, 0)
+			; , NumPut(Round(x), MOUSEINPUT, 4, "Int"), NumPut(Round(y), MOUSEINPUT, 8, "Int")
+			; , NumPut(0x0001, MOUSEINPUT, 16, "UInt")
+			; ;DllCall("SendInput", _ptr, 1, "Ptr", &MOUSEINPUT, "Int", 28)
+			; Return Exec[&MOUSEINPUT]
+
+			Return DllCall("mouse_event", "UInt", 0x0001, "Int", Round(x), "Int", Round(y))
 		}
 	}
 
@@ -130,21 +134,21 @@
 	}
 }
 
-class AimLock
-{
-	static Activator := new Tracker(0, A_ScreenWidth)
+; class AimLock
+; {
+; 	static Activator := new Tracker(0, A_ScreenWidth)
 
-	RoadHog(InGameSens, lParam)
-	{
-		If (NumGet(lParam+0, 0) = 160) ;LShift
-			Return AimLock.Activator.Calculate(InGameSens, 0, 0)
-	}
+; 	RoadHog(InGameSens, lParam)
+; 	{
+; 		If (NumGet(lParam+0, 0) = 160) ;LShift
+; 			Return AimLock.Activator.Calculate(InGameSens, 0, 0)
+; 	}
 
-	Ana(InGameSens, lParam) ;Work in progress..
-	{
-		;Activator.Calculate(this.InGameSens, 0, 0)
-	}
-}
+; 	Ana(InGameSens, lParam) ;Work in progress..
+; 	{
+; 		;Activator.Calculate(this.InGameSens, 0, 0)
+; 	}
+; }
 
 class Private
 {
