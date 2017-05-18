@@ -26,7 +26,7 @@
 	{
 		Call(self, Sensitivity, AntiShake, Humanizer)
 		{
-			static calibrate := {x: 45, y: 70}
+			static calibrate := {x: Round(45 - A_ScreenWidth / 2), y: Round(70 - A_ScreenHeight / 2)}
 
 			;ToolTip, % Sensitivity "`n" AntiShake
 
